@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 16:55:50
+# Last modified: 2016-11-29 17:06:16
 
 import socket
 import da
@@ -81,8 +81,8 @@ class Switcher(CommandSwitchTableProto):
         # handlers
         self.printcore = None
         self.__rtmpprocess = None
-        self.sendData = SendData(self.printcore)
-        self.pool = Pool(process=4)
+        self.sendData = self.SendData(self.printcore)
+        self.pool = Pool(processes=4)
 
         # TODO:check print time
         #  self.__printtimeHandler = check_print_time()
