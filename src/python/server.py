@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 16:53:21
+# Last modified: 2016-11-29 16:55:50
 
 import socket
 import da
@@ -139,7 +139,7 @@ class Switcher(CommandSwitchTableProto):
 
         filename = ClientFilePath.split("/")[-1]
         print("receive file name", filename)
-        self.sendData.set_file_name = filename
+        self.sendData.set_file_name(filename)
 
         newfilepath = os.path.join(filepath, filename)
         self.__printtimeHandler.print_time(newfilepath)

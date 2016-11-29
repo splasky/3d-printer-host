@@ -15,15 +15,19 @@ printer_status_path	/home/splasky/workspace/socket/src/python/client.py	/^printe
 reset	/home/splasky/workspace/socket/src/python/server.py	/^    def reset(self):$/;"	m	language:Python	class:Switcher
 resume	/home/splasky/workspace/socket/src/python/server.py	/^    def resume(self):$/;"	m	language:Python	class:Switcher
 run	/home/splasky/workspace/socket/src/python/client.py	/^    def run(self):$/;"	m	language:Python	class:PrinterStatusDaemon
+SendData	/home/splasky/workspace/socket/src/python/server.py	/^    class SendData(object):$/;"	c	language:Python	class:Switcher
 send_now	/home/splasky/workspace/socket/src/python/server.py	/^    def send_now(self, command):$/;"	m	language:Python	class:Switcher
+set_file_name	/home/splasky/workspace/socket/src/python/server.py	/^        def set_file_name(self, filename):$/;"	m	language:Python	class:Switcher.SendData
 startprint	/home/splasky/workspace/socket/src/python/server.py	/^    def startprint(self, ClientFilePath):$/;"	m	language:Python	class:Switcher
-StoppableThread	/home/splasky/workspace/socket/src/python/server.py	/^class StoppableThread(Thread):$/;"	c	language:Python
-stopped	/home/splasky/workspace/socket/src/python/server.py	/^    def stopped(self):$/;"	m	language:Python	class:StoppableThread
+stopped	/home/splasky/workspace/socket/src/python/server.py	/^        def stopped(self):$/;"	m	language:Python	class:Switcher.SendData
+stopRun	/home/splasky/workspace/socket/src/python/client.py	/^    def stopRun(self):$/;"	m	language:Python	class:PrinterStatusDaemon
+stopRunning	/home/splasky/workspace/socket/src/python/server.py	/^        def stopRunning(self):$/;"	m	language:Python	class:Switcher.SendData
 Switcher	/home/splasky/workspace/socket/src/python/server.py	/^class Switcher(CommandSwitchTableProto):$/;"	c	language:Python
+Thread_InsertSensors	/home/splasky/workspace/socket/src/python/server.py	/^        def Thread_InsertSensors(self):$/;"	m	language:Python	class:Switcher.SendData
+Thread_SendJsonData	/home/splasky/workspace/socket/src/python/server.py	/^        def Thread_SendJsonData(self):$/;"	m	language:Python	class:Switcher.SendData
 __check_gcode	/home/splasky/workspace/socket/src/python/server.py	/^    def __check_gcode(self, filename):$/;"	m	language:Python	class:Switcher	file:
-__createJsonData	/home/splasky/workspace/socket/src/python/server.py	/^    def __createJsonData(self):$/;"	m	language:Python	class:Switcher	file:
-__init__	/home/splasky/workspace/socket/src/python/client.py	/^    def __init__(self, host, port=0, lock=False):$/;"	m	language:Python	class:PrinterStatusDaemon
+__createJsonData	/home/splasky/workspace/socket/src/python/server.py	/^        def __createJsonData(self):$/;"	m	language:Python	class:Switcher.SendData	file:
+__init__	/home/splasky/workspace/socket/src/python/client.py	/^    def __init__(self, host, port=0):$/;"	m	language:Python	class:PrinterStatusDaemon
+__init__	/home/splasky/workspace/socket/src/python/server.py	/^        def __init__(self, printercore):$/;"	m	language:Python	class:Switcher.SendData
 __init__	/home/splasky/workspace/socket/src/python/server.py	/^    def __init__(self):$/;"	m	language:Python	class:Switcher
-__init__	/home/splasky/workspace/socket/src/python/server.py	/^    def __init__(self, lock=True, target='', name=''):$/;"	m	language:Python	class:StoppableThread
-__st_Sensors	/home/splasky/workspace/socket/src/python/server.py	/^    def __st_Sensors(self):$/;"	m	language:Python	class:Switcher	file:
-__st_thread	/home/splasky/workspace/socket/src/python/server.py	/^    def __st_thread(self):$/;"	m	language:Python	class:Switcher	file:
+__st_Sensors	/home/splasky/workspace/socket/src/python/server.py	/^        def __st_Sensors(self):$/;"	m	language:Python	class:Switcher.SendData	file:
