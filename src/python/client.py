@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 13:33:08
+# Last modified: 2016-11-29 14:58:55
 
 import socket
 import sys
@@ -88,6 +88,7 @@ def main():
                 if li[0].strip() == "connect":
                     PrinterStatusThread = PrinterStatusDaemon(host, 6666)
                     PrinterStatusThread.setDaemon(True)
+                    PrinterStatusDaemon.start()
 
             # recv from server
             redata = Client.recv(1024)
