@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-28 20:35:26
+# Last modified: 2016-11-29 13:33:08
 
 import socket
 import sys
@@ -24,11 +24,11 @@ FIFO = "/tmp/3dprinter.fifo"
 
 class PrinterStatusDaemon(threading.Thread):
 
-    def __init__(self, host, port=0, lock=False):
+    def __init__(self, host, port=0):
         """PrinterStatusDaemon
         """
         super(PrinterStatusDaemon, self).__init__()
-        self._lock = threading.Lock()
+        #  self._lock = threading.Lock()
         self.port = port
         self.host = host
         self.lock = lock
@@ -37,10 +37,12 @@ class PrinterStatusDaemon(threading.Thread):
         while self.lock:
             C_printer_status(printer_status_path, self.host,)
 
+    def stopRun(self):
+        self.lock = False
+
 
 def main():
     localServer = TCP_Server(address='127.0.0.1', port=1025)
-    lock = True
 
     PrinterStatusThread = None
 
@@ -79,13 +81,12 @@ def main():
             else:
                 if li[0].strip() == "disconnect":
                     time.sleep(5)  # wait for server stop and get last status
-                    lock = False
+                    PrinterStatusThread.stopRun()
                     PrinterStatusThread.join(10)
                     C_printer_status(printer_status_path, host,)
 
                 if li[0].strip() == "connect":
-                    lock = True
-                    PrinterStatusThread = PrinterStatusDaemon(host, 6666, lock)
+                    PrinterStatusThread = PrinterStatusDaemon(host, 6666)
                     PrinterStatusThread.setDaemon(True)
 
             # recv from server
