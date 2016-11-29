@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 17:06:16
+# Last modified: 2016-11-29 20:14:33
 
 import socket
 import da
@@ -10,7 +10,6 @@ import os
 import subprocess
 import shlex
 from threading import Thread
-from multiprocessing import Pool
 from package.send import upload_server
 from package.s_printer_status import S_printer_status
 from package.debug import PrintException
@@ -57,8 +56,8 @@ class Switcher(CommandSwitchTableProto):
             data = self.printcore.printer_status()
 
             # get filename if startprint is start
-            data["File_Name"] = self.__fileName
-            if self.__fileName is not "":
+            data["File_Name"] = self.fileName
+            if self.fileName is not "":
                 # TODO:printtime
                 #  data["PrintTime"] = self.__printtimeHandler.end_time()
                 pass
@@ -81,8 +80,7 @@ class Switcher(CommandSwitchTableProto):
         # handlers
         self.printcore = None
         self.__rtmpprocess = None
-        self.sendData = self.SendData(self.printcore)
-        self.pool = Pool(processes=4)
+        self.sendData = None
 
         # TODO:check print time
         #  self.__printtimeHandler = check_print_time()
@@ -109,9 +107,10 @@ class Switcher(CommandSwitchTableProto):
 
     def connect(self):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
+        self.sendData = self.SendData(self.printcore)
         if self.printcore is not None:
-            self.pool.map(self.sendData.Thread_InsertSensors())
-            self.pool.map(self.sendData.Thread_SendJsonData())
+            # TODO:synchronous
+            pass
 
     def disconnect(self):
         self.printcore.disconnect()
