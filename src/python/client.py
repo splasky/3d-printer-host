@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 14:58:55
+# Last modified: 2016-11-29 17:18:04
 
 import socket
 import sys
@@ -31,7 +31,7 @@ class PrinterStatusDaemon(threading.Thread):
         #  self._lock = threading.Lock()
         self.port = port
         self.host = host
-        self.lock = lock
+        self.lock = True
 
     def run(self):
         while self.lock:
@@ -87,8 +87,8 @@ def main():
 
                 if li[0].strip() == "connect":
                     PrinterStatusThread = PrinterStatusDaemon(host, 6666)
-                    PrinterStatusThread.setDaemon(True)
-                    PrinterStatusDaemon.start()
+                    PrinterStatusThread.daemon = True
+                    PrinterStatusThread.start()
 
             # recv from server
             redata = Client.recv(1024)
