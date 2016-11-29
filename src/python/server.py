@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 13:37:14
+# Last modified: 2016-11-29 16:53:21
 
 import socket
 import da
@@ -10,6 +10,7 @@ import os
 import subprocess
 import shlex
 from threading import Thread
+from multiprocessing import Pool
 from package.send import upload_server
 from package.s_printer_status import S_printer_status
 from package.debug import PrintException
@@ -28,23 +29,63 @@ filepath = "/home/pi/temp/"
 
 class Switcher(CommandSwitchTableProto):
 
+    class SendData(object):
+
+        def __init__(self, printercore):
+            self.printcore = printercore
+            self.fileName = ""
+            self.IRtemp = 0.0
+            self.lock = True
+
+        def stopRunning(self):
+            self.lock = False
+
+        def stopped(self):
+            return self.lock
+
+        def set_file_name(self, filename):
+            self.fileName = filename
+
+        def __st_Sensors(self):
+            sensors_data = da.get_Sensors_data()
+            if sensors_data is not None:
+                sensors_data["IR_temperature"] = self.IRtemp
+                da.Send_Sensors(data=sensors_data)
+
+        def __createJsonData(self):
+            # get printer status data
+            data = self.printcore.printer_status()
+
+            # get filename if startprint is start
+            data["File_Name"] = self.__fileName
+            if self.__fileName is not "":
+                # TODO:printtime
+                #  data["PrintTime"] = self.__printtimeHandler.end_time()
+                pass
+            logging.debug(data)
+            return data
+
+        def Thread_InsertSensors(self):
+            while self.stopped():
+                # inset sensors data into database
+                self.__st_Sensors()
+
+        def Thread_SendJsonData(self):
+            while self.stopped():
+                # start json file
+                S_printer_status(self.__createJsonData())
+                logging.debug("run st_thread success!")
+
     def __init__(self):
         super(Switcher, self).__init__()
         # handlers
         self.printcore = None
-        self.__Th_printer_st = None
         self.__rtmpprocess = None
-        self.__fileName = ""
-        self.__printtimeHandler = check_print_time()
+        self.sendData = SendData(self.printcore)
+        self.pool = Pool(process=4)
 
-    class StoppableThread(Thread):
-
-        def __init__(self, target='', name=''):
-            super(StoppableThread, self).__init__(target=target, name=name)
-            self.__lock = True
-
-        def stopRun(self):
-            self.__lock = False
+        # TODO:check print time
+        #  self.__printtimeHandler = check_print_time()
 
     def getTask(self, command):
         listcommand = command.split(" ", 1)
@@ -60,28 +101,6 @@ class Switcher(CommandSwitchTableProto):
             self.task.get(listcommand[0].strip())()
         return "Command Send Success"
 
-    def __createJsonData(self):
-        # get printer status data
-        data = self.printcore.printer_status()
-        # get filename if startprint is start
-        data["File_Name"] = self.__fileName
-        if self.__fileName is not "":
-            data["PrintTime"] = self.__printtimeHandler.end_time()
-        logging.debug(data)
-        return data
-
-    def __st_thread(self):
-        while self.__Th_printer_st.stopped():
-            self.__st_Sensors()
-            S_printer_status(self.__createJsonData())
-            logging.debug("run st_thread success!")
-
-    def __st_Sensors(self):
-        sensors_data = da.get_Sensors_data()
-        if sensors_data is not None:
-            sensors_data["IR_temperature"] = self.printcore.headtemp()
-            da.Send_Sensors(data=sensors_data)
-
     def __check_gcode(self, filename):
         if filename.split(".")[-1] == "gcode":
             return True
@@ -91,16 +110,12 @@ class Switcher(CommandSwitchTableProto):
     def connect(self):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         if self.printcore is not None:
-            # the lock for start or stop the S_printer_status
-            self.__Th_printer_st = StoppableThread(
-                target=self.__st_thread,
-                name="printer_status_server")
-            self.__Th_printer_st.setDaemon(True)
+            self.pool.map(self.sendData.Thread_InsertSensors())
+            self.pool.map(self.sendData.Thread_SendJsonData())
 
     def disconnect(self):
         self.printcore.disconnect()
-        if self.__Th_printer_st.isAlive is True:
-            self.__Th_printer_st.join()
+        self.sendData.stopRunning()
 
     def reset(self):
         self.printcore.reset()
@@ -124,7 +139,7 @@ class Switcher(CommandSwitchTableProto):
 
         filename = ClientFilePath.split("/")[-1]
         print("receive file name", filename)
-        self.__fileName = filename
+        self.sendData.set_file_name = filename
 
         newfilepath = os.path.join(filepath, filename)
         self.__printtimeHandler.print_time(newfilepath)
