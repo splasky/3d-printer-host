@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-28 20:31:03
+# Last modified: 2016-11-29 13:37:14
 
 import socket
 import da
@@ -26,16 +26,6 @@ import threading
 filepath = "/home/pi/temp/"
 
 
-class StoppableThread(Thread):
-
-    def __init__(self, lock=True, target='', name=''):
-        super(StoppableThread, self).__init__(target=target, name=name)
-        self.__lock = lock
-
-    def stopped(self):
-        return self.__lock
-
-
 class Switcher(CommandSwitchTableProto):
 
     def __init__(self):
@@ -45,8 +35,16 @@ class Switcher(CommandSwitchTableProto):
         self.__Th_printer_st = None
         self.__rtmpprocess = None
         self.__fileName = ""
-        self.__lock = True
         self.__printtimeHandler = check_print_time()
+
+    class StoppableThread(Thread):
+
+        def __init__(self, target='', name=''):
+            super(StoppableThread, self).__init__(target=target, name=name)
+            self.__lock = True
+
+        def stopRun(self):
+            self.__lock = False
 
     def getTask(self, command):
         listcommand = command.split(" ", 1)
@@ -94,9 +92,7 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         if self.printcore is not None:
             # the lock for start or stop the S_printer_status
-            self.__lock = True
             self.__Th_printer_st = StoppableThread(
-                lock=self.__lock,
                 target=self.__st_thread,
                 name="printer_status_server")
             self.__Th_printer_st.setDaemon(True)
@@ -104,7 +100,6 @@ class Switcher(CommandSwitchTableProto):
     def disconnect(self):
         self.printcore.disconnect()
         if self.__Th_printer_st.isAlive is True:
-            self.__lock = False
             self.__Th_printer_st.join()
 
     def reset(self):
