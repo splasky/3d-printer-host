@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 20:14:33
+# Last modified: 2016-11-30 20:09:02
 
 import socket
 import da
@@ -9,7 +9,10 @@ import logging
 import os
 import subprocess
 import shlex
+import multiprocessing
+from package import ThreadPool
 from threading import Thread
+from time import sleep
 from package.send import upload_server
 from package.s_printer_status import S_printer_status
 from package.debug import PrintException
@@ -68,6 +71,7 @@ class Switcher(CommandSwitchTableProto):
             while self.stopped():
                 # inset sensors data into database
                 self.__st_Sensors()
+                sleep(1)
 
         def Thread_SendJsonData(self):
             while self.stopped():
@@ -81,6 +85,7 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = None
         self.__rtmpprocess = None
         self.sendData = None
+        self.pool = multiprocessing.Pool(processes=4)
 
         # TODO:check print time
         #  self.__printtimeHandler = check_print_time()
@@ -109,12 +114,16 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         self.sendData = self.SendData(self.printcore)
         if self.printcore is not None:
-            # TODO:synchronous
-            pass
+            self.pool.map(self.sendData.Thread_InsertSensors)
+            self.pool.map(self.sendData.Thread_SendJsonData)
+        else:
+            logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
         self.sendData.stopRunning()
+        self.pool.close()
+        self.pool.join()
 
     def reset(self):
         self.printcore.reset()
