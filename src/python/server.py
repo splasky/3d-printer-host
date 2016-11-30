@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-30 20:09:02
+# Last modified: 2016-11-30 20:25:12
 
 import socket
 import da
@@ -10,7 +10,7 @@ import os
 import subprocess
 import shlex
 import multiprocessing
-from package import ThreadPool
+from package.thread_pool import ThreadPool
 from threading import Thread
 from time import sleep
 from package.send import upload_server
@@ -85,7 +85,7 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = None
         self.__rtmpprocess = None
         self.sendData = None
-        self.pool = multiprocessing.Pool(processes=4)
+        self.pool = ThreadPool(6)
 
         # TODO:check print time
         #  self.__printtimeHandler = check_print_time()
@@ -114,16 +114,15 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         self.sendData = self.SendData(self.printcore)
         if self.printcore is not None:
-            self.pool.map(self.sendData.Thread_InsertSensors)
-            self.pool.map(self.sendData.Thread_SendJsonData)
+            self.pool.add_task(self.sendData.Thread_InsertSensors)
+            self.pool.add_task(self.sendData.Thread_SendJsonData)
         else:
             logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
         self.sendData.stopRunning()
-        self.pool.close()
-        self.pool.join()
+        self.pool.wait_completion()
 
     def reset(self):
         self.printcore.reset()
