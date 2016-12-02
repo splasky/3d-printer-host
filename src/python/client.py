@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 17:18:04
+# Last modified: 2016-12-02 18:25:21
 
 import socket
 import sys
@@ -83,6 +83,7 @@ def main():
                     time.sleep(5)  # wait for server stop and get last status
                     PrinterStatusThread.stopRun()
                     PrinterStatusThread.join(10)
+                    # TODO:check json file 3dprinter online is false
                     C_printer_status(printer_status_path, host,)
 
                 if li[0].strip() == "connect":
