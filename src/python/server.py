@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-02 18:07:31
+# Last modified: 2016-12-02 19:34:15
 
 import socket
 import da
@@ -21,7 +21,7 @@ from package.da import PrintCore
 from package.da import CommandSwitchTableProto
 from package import da
 from package import DHT11
-from package.printtime import check_print_time
+from package.est_time import es_time
 import threading
 
 
@@ -33,10 +33,28 @@ class Switcher(CommandSwitchTableProto):
 
     class SendData(object):
 
+        class Print_time(object):
+
+            def __init__(self):
+                self.hour = 0
+                self.miniute = 0
+
+            @property
+            def getHour(self):
+                return self.hour
+
+            @property
+            def getMiniute(self):
+                return self.miniute
+
+            def getTime(self):
+                return self.hour * 60 + self.miniute
+
         def __init__(self, printercore):
             self.printcore = printercore
             self.fileName = ""
             self.lock = True
+            self.print_time = self.Print_time()
 
         def stopRunning(self):
             self.lock = False
@@ -53,6 +71,10 @@ class Switcher(CommandSwitchTableProto):
                 sensors_data["IR_temperature"] = self.printcore.headtemp()
                 da.Send_Sensors(data=sensors_data)
 
+        def Set_Print_Time(self, hour=0, miniute=0):
+            self.print_time.hour = hour
+            self.print_time.miniute = miniute
+
         def __createJsonData(self):
             # get printer status data
             data = self.printcore.printer_status()
@@ -60,9 +82,8 @@ class Switcher(CommandSwitchTableProto):
             # get filename if startprint is start
             data["File_Name"] = self.fileName
             if self.fileName is not "":
-                # TODO:printtime
-                #  data["PrintTime"] = self.__printtimeHandler.end_time()
-                pass
+                # add print time into data
+                data["PrintTime"] = self.print_time.getTime()
             logging.debug(data)
             return data
 
@@ -83,13 +104,11 @@ class Switcher(CommandSwitchTableProto):
 
     def __init__(self):
         super(Switcher, self).__init__()
-        # handlers self.printcore = None
-        self.__rtmpprocess = None
+        # handlers
+        self.printcore = None
+        #  self.__rtmpprocess = None
         self.sendData = None
         self.pool = ThreadPool(6)
-
-        # TODO:check print time
-        #  self.__printtimeHandler = check_print_time()
 
     def getTask(self, command):
         listcommand = command.split(" ", 1)
@@ -149,13 +168,16 @@ class Switcher(CommandSwitchTableProto):
         filename = ClientFilePath.split("/")[-1]
         print("receive file name", filename)
         self.sendData.set_file_name(filename)
-
         newfilepath = os.path.join(filepath, filename)
-        # TODO:print time!
-        #  self.__printtimeHandler.print_time(newfilepath)
 
         if self.__check_gcode(filename):
             upload_server(newfilepath)
+
+            # set print time!
+            est_time = es_time(newfilepath)
+            (x, y) = est_time.estime()
+            self.sendData.Set_Print_Time(x, y)
+
             self.printcore.startprint(newfilepath)
         else:
             print("not gcode file")

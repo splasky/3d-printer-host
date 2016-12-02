@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-02 18:15:04
+# Last modified: 2016-12-02 18:33:53
 
 import math
 import os.path
@@ -167,6 +167,8 @@ class es_time():
 
             print("Estimated print time: {} hours {} minutes".format(x, y))
             # ------------------------------------------------------------------------------------------------------
+            # return two variable x:hour y:miniute
+            return x, y
 
         except:
             print 'something wrong'
