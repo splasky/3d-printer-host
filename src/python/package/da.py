@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-28 17:49:56
+# Last modified: 2016-11-30 20:57:38
 
 import sys
 import time
@@ -226,7 +226,7 @@ class PrintCore(object):
         try:
             return self.gettemp()
         except:
-            print("py:get headtemp error occure")
+            logging.error("py:get headtemp error occure")
             PrintException()
             return 0
 
