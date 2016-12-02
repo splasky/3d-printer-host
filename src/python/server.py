@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-30 20:25:12
+# Last modified: 2016-12-02 18:07:31
 
 import socket
 import da
@@ -36,7 +36,6 @@ class Switcher(CommandSwitchTableProto):
         def __init__(self, printercore):
             self.printcore = printercore
             self.fileName = ""
-            self.IRtemp = 0.0
             self.lock = True
 
         def stopRunning(self):
@@ -51,7 +50,7 @@ class Switcher(CommandSwitchTableProto):
         def __st_Sensors(self):
             sensors_data = da.get_Sensors_data()
             if sensors_data is not None:
-                sensors_data["IR_temperature"] = self.IRtemp
+                sensors_data["IR_temperature"] = self.printcore.headtemp()
                 da.Send_Sensors(data=sensors_data)
 
         def __createJsonData(self):
@@ -73,16 +72,18 @@ class Switcher(CommandSwitchTableProto):
                 self.__st_Sensors()
                 sleep(1)
 
+        def SendJsonToRemote(self):
+            S_printer_status(self.__createJsonData())
+
         def Thread_SendJsonData(self):
             while self.stopped():
                 # start json file
-                S_printer_status(self.__createJsonData())
+                self.SendJsonToRemote()
                 logging.debug("run st_thread success!")
 
     def __init__(self):
         super(Switcher, self).__init__()
-        # handlers
-        self.printcore = None
+        # handlers self.printcore = None
         self.__rtmpprocess = None
         self.sendData = None
         self.pool = ThreadPool(6)
@@ -123,6 +124,7 @@ class Switcher(CommandSwitchTableProto):
         self.printcore.disconnect()
         self.sendData.stopRunning()
         self.pool.wait_completion()
+        self.sendData.SendJsonToRemote()
 
     def reset(self):
         self.printcore.reset()
@@ -149,7 +151,8 @@ class Switcher(CommandSwitchTableProto):
         self.sendData.set_file_name(filename)
 
         newfilepath = os.path.join(filepath, filename)
-        self.__printtimeHandler.print_time(newfilepath)
+        # TODO:print time!
+        #  self.__printtimeHandler.print_time(newfilepath)
 
         if self.__check_gcode(filename):
             upload_server(newfilepath)
