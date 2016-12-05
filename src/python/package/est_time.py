@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-02 18:33:53
+# Last modified: 2016-12-05 19:06:06
 
 import math
 import os.path
@@ -14,6 +14,7 @@ class es_time():
     def __init__(self, file):
 
         self.homingspeed = 1500
+
         self.fiveDaccel = True
         self.caruklip = False
         self.Absolutecoord = True
@@ -45,13 +46,13 @@ class es_time():
 
     def cord(self, line):
 
-        # print (int(line[1:].find('.'))+3)
-        c = float(line[1:(int(line[1:].find('.')) + 3)])  # --------------------------
+        c = float(line[1:(int(line[1:].find('.') + 6))])  # --------------------------
 
         return c
 
     def estime(self):
         try:
+
             f = open(self.file, 'r')
             # in = new BufferedReader(new FileReader(filelocation));
 
@@ -70,20 +71,21 @@ class es_time():
                         if(splitline[i].startswith("Y")):
 
                             self.ycords = self.cord(splitline[i])
-
+                            # print self.ycords
                         if(splitline[i].startswith("Z")):
 
                             self.zcords = self.cord(splitline[i])
 
+                            # print self.zcords
                         if(splitline[i].startswith("E")):
 
                             self.ecords = self.cord(splitline[i])
-
+                            # print self.ecords
                         if(splitline[i].startswith("F")):
 
                             self.frate = (self.cord(splitline[i])) / 60
-
-                    if self.Absolutecoord is True:
+                            # print 'f',self.frate
+                    if self.Absolutecoord == True:
 
                         self.deltax = self.xcords - self.oldxcords
                         self.deltay = self.ycords - self.oldycords
@@ -97,15 +99,15 @@ class es_time():
                         self.deltaz = self.zcords
                         self.deltae = self.ecords
 
-                        self.deltadist = math.sqrt((self.deltax * self.deltax) +
-                                                   (self.deltay * self.deltay) + (self.deltaz * self.deltaz))
+                    self.deltadist = math.sqrt((self.deltax * self.deltax) + (self.deltay *
+                                                                              self.deltay) + (self.deltaz * self.deltaz))
 
                     if(self.deltadist == 0):
                         # print self.deltae,self.frate
                         self.deltatime = (abs(self.deltae)) / self.frate
                         # print self.deltatime
                     else:
-                        if self.fiveDaccel is True:
+                        if self.fiveDaccel == True:
 
                             if (self.frate == self.oldfrate):
 
@@ -119,7 +121,7 @@ class es_time():
 
                         else:
 
-                            if (self.caruklip is True):
+                            if (self.caruklip == True):
 
                                 self.accel = ((self.frate * self.frate) - (self.min_units_per_second *
                                                                            self.min_units_per_second)) / (2 * self.full_velocity_units)
@@ -143,7 +145,7 @@ class es_time():
 
                                         self.frate = math.sqrt(
                                             (self.min_units_per_second * self.min_units_per_second) + (self.accel * self.deltadist))
-                                        self.deltatime = 2 * (self.frate - min_units_per_second) / self.accel
+                                        self.deltatime = 2 * (self.frate - self.min_units_per_second) / self.accel
 
                 if(self.line.startswith("G28")):
 
@@ -157,18 +159,18 @@ class es_time():
                 # if self.time==True:
 
                 self.time = self.time + self.deltatime
+
                 self.oldxcords = self.xcords
                 self.oldycords = self.ycords
                 self.oldzcords = self.zcords
                 self.oldecords = self.ecords
                 self.oldfrate = self.frate
-            x = (round(60 * ((self.time / 3600) - (round(math.floor(self.time / 3600))))))
-            y = (round(math.floor(self.time / 3600)))
+            minute = round(60 * ((self.time / 3600) - (round(math.floor(self.time / 3600)))))
+            hour = round(math.floor(self.time / 3600))
 
-            print("Estimated print time: {} hours {} minutes".format(x, y))
+            print ("Estimated print time: {} hours {} minutes".format(hour, minute))
+            return (hour, minute)
             # ------------------------------------------------------------------------------------------------------
-            # return two variable x:hour y:miniute
-            return x, y
 
         except:
             print 'something wrong'
