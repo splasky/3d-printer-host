@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-02 19:34:15
+# Last modified: 2016-12-13 15:30:30
 
 import socket
 import da
@@ -22,6 +22,7 @@ from package.da import CommandSwitchTableProto
 from package import da
 from package import DHT11
 from package.est_time import es_time
+from package.timer import PercentTimer
 import threading
 
 
@@ -55,6 +56,7 @@ class Switcher(CommandSwitchTableProto):
             self.fileName = ""
             self.lock = True
             self.print_time = self.Print_time()
+            self.Timer = PercentTimer()
 
         def stopRunning(self):
             self.lock = False
@@ -74,6 +76,16 @@ class Switcher(CommandSwitchTableProto):
         def Set_Print_Time(self, hour=0, miniute=0):
             self.print_time.hour = hour
             self.print_time.miniute = miniute
+            self.Timer.setTotalTime((hour * 60 + miniute) * 60)
+
+        def StopTimer(self):
+            self.Timer.stopTimer()
+
+        def StartTimer(self):
+            self.Timer.startTimer()
+
+        def CleanTimer(self):
+            self.Timer.cleanTimer()
 
         def __createJsonData(self):
             # get printer status data
@@ -83,7 +95,7 @@ class Switcher(CommandSwitchTableProto):
             data["File_Name"] = self.fileName
             if self.fileName is not "":
                 # add print time into data
-                data["PrintTime"] = self.print_time.getTime()
+                data["PrintPercent"] = self.Timer.getPercent()
             logging.debug(data)
             return data
 
@@ -98,9 +110,8 @@ class Switcher(CommandSwitchTableProto):
 
         def Thread_SendJsonData(self):
             while self.stopped():
-                # start json file
                 self.SendJsonToRemote()
-                logging.debug("run st_thread success!")
+                logging.debug("Send json data success")
 
     def __init__(self):
         super(Switcher, self).__init__()
@@ -150,12 +161,15 @@ class Switcher(CommandSwitchTableProto):
 
     def pause(self):
         self.printcore.pause()
+        self.sendData.StopTimer()
 
     def resume(self):
         self.printcore.resume()
+        self.sendData.StartTimer()
 
     def cancel(self):
         self.printcore.cancel()
+        self.sendData.CleanTimer()
 
     def home(self):
         self.printcore.home()
@@ -177,6 +191,7 @@ class Switcher(CommandSwitchTableProto):
             est_time = es_time(newfilepath)
             (x, y) = est_time.estime()
             self.sendData.Set_Print_Time(x, y)
+            self.sendData.StartTimer()
 
             self.printcore.startprint(newfilepath)
         else:
