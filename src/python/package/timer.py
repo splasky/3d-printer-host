@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 16:08:17
+# Last modified: 2016-12-19 16:29:54
 
 from __future__ import print_function
 import time
@@ -60,5 +60,5 @@ class PercentTimer(object):
         print("set total time first!", file=sys.stderr)
         return 0
 
-    def clear(self):
+    def cleanTimer(self):
         self.__init__()
