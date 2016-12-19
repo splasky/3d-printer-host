@@ -1,5 +1,6 @@
 **\tags
 *.swp
-*.pyc
+**.pyc
+**/*.pyc
 test_*
-
+*.cache
