@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-13 15:30:30
+# Last modified: 2016-12-19 19:35:14
 
 import socket
 import da
@@ -76,7 +76,7 @@ class Switcher(CommandSwitchTableProto):
         def Set_Print_Time(self, hour=0, miniute=0):
             self.print_time.hour = hour
             self.print_time.miniute = miniute
-            self.Timer.setTotalTime((hour * 60 + miniute) * 60)
+            self.Timer.TotalTime = int((hour * 60 + miniute) * 60)
 
         def StopTimer(self):
             self.Timer.stopTimer()
@@ -179,23 +179,29 @@ class Switcher(CommandSwitchTableProto):
 
     def startprint(self, ClientFilePath):
 
-        filename = ClientFilePath.split("/")[-1]
-        print("receive file name", filename)
-        self.sendData.set_file_name(filename)
-        newfilepath = os.path.join(filepath, filename)
+        try:
+            filename = ClientFilePath.split("/")[-1]
+            print("receive file name", filename)
+            self.sendData.set_file_name(filename)
+            newfilepath = os.path.join(filepath, filename)
 
-        if self.__check_gcode(filename):
-            upload_server(newfilepath)
+            if self.__check_gcode(filename):
+                upload_server(newfilepath)
 
-            # set print time!
-            est_time = es_time(newfilepath)
-            (x, y) = est_time.estime()
-            self.sendData.Set_Print_Time(x, y)
-            self.sendData.StartTimer()
+                # set print time!
+                est_time = es_time(newfilepath)
+                (x, y) = est_time.estime()
+                self.sendData.Set_Print_Time(x, y)
+                self.sendData.CleanTimer()
+                self.sendData.StartTimer()
 
-            self.printcore.startprint(newfilepath)
-        else:
-            print("not gcode file")
+                self.pool.add_task(
+                    self.printcore.startprint(newfilepath)
+                )
+            else:
+                print("not gcode file")
+        except:
+            PrintException()
 
     def Default(self):
         print("no command")

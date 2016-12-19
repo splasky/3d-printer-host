@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 16:29:54
+# Last modified: 2016-12-19 20:10:49
 
 from __future__ import print_function
 import time
@@ -16,49 +16,50 @@ class PercentTimer(object):
         self.stop_through = 0
         self.current_time = 0  # all time that stop print
         self.total_time = 0
+        self.isStop = False
 
     @property
     def StartTime(self):
-        value = int(self.start_time)
-        return value
+        return self.start_time
 
     @property
     def TotalTime(self):
-        value = int(self.total_time)
-        return value
+        return self.total_time
 
     @TotalTime.setter
     def TotalTime(self, value):
         if not isinstance(value, int):
-            raise ValueError('score must be an integer!')
+            raise ValueError('Total Time must be an integer!')
         if value < 0:
-            raise ValueError('score must more than 0!')
+            raise ValueError('Total Time must more than 0!')
         self.total_time = value
 
     def startTimer(self):
-        if self.current_time != 0:
-            self.stop_through += time.time() - self.current_time
+        if self.isStop is True:
+            self.stop_through += int(time.time() - self.current_time)
             self.current_time = time.time()
+            self.isStop = False
             return
-        self.start_time = time.time()
         self.current_time = time.time()
+        self.start_time = time.time()
 
     def stopTimer(self):
         self.current_time = time.time()
+        self.isStop = True
 
     def getPercent(self):
-        self.stopTimer()
         stop = time.time()
         debug("Total time:" + str(self.TotalTime))
-        throughTime = int(stop - self.start_time - self.stop_through) * 100 / self.total_time
-        debug("throughTime:" + str(throughTime))
-        self.startTimer()
+        #  throughTime = int((stop - self.start_time - self.stop_through) * 100 / self.total_time)
+        throughTime = (stop - self.start_time - self.stop_through)
+        debug("ThroughTime:" + str(throughTime))
         if(throughTime > 100):
             return 100
         if(self.total_time != 0):
-            return throughTime
-        print("set total time first!", file=sys.stderr)
-        return 0
+            return int((throughTime / self.total_time) * 100)
+        else:
+            print("set total time first!", file=sys.stderr)
+            return 0
 
     def cleanTimer(self):
         self.__init__()
