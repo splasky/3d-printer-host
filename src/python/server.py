@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 19:35:14
+# Last modified: 2016-12-19 20:38:47
 
 import socket
 import da
@@ -76,7 +76,7 @@ class Switcher(CommandSwitchTableProto):
         def Set_Print_Time(self, hour=0, miniute=0):
             self.print_time.hour = hour
             self.print_time.miniute = miniute
-            self.Timer.TotalTime = int((hour * 60 + miniute) * 60)
+            self.Timer.TotalTime = (hour * 60 + miniute) * 60
 
         def StopTimer(self):
             self.Timer.stopTimer()
@@ -184,6 +184,7 @@ class Switcher(CommandSwitchTableProto):
             print("receive file name", filename)
             self.sendData.set_file_name(filename)
             newfilepath = os.path.join(filepath, filename)
+            self.sendData.CleanTimer()
 
             if self.__check_gcode(filename):
                 upload_server(newfilepath)
@@ -192,7 +193,6 @@ class Switcher(CommandSwitchTableProto):
                 est_time = es_time(newfilepath)
                 (x, y) = est_time.estime()
                 self.sendData.Set_Print_Time(x, y)
-                self.sendData.CleanTimer()
                 self.sendData.StartTimer()
 
                 self.pool.add_task(

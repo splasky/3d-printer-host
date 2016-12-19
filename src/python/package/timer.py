@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 20:10:49
+# Last modified: 2016-12-19 20:46:45
 
 from __future__ import print_function
 import time
@@ -17,6 +17,7 @@ class PercentTimer(object):
         self.current_time = 0  # all time that stop print
         self.total_time = 0
         self.isStop = False
+        self.__CONST_HEATTIME = 90
 
     @property
     def StartTime(self):
@@ -28,11 +29,9 @@ class PercentTimer(object):
 
     @TotalTime.setter
     def TotalTime(self, value):
-        if not isinstance(value, int):
-            raise ValueError('Total Time must be an integer!')
         if value < 0:
             raise ValueError('Total Time must more than 0!')
-        self.total_time = value
+        self.total_time = value + self.__CONST_HEATTIME
 
     def startTimer(self):
         if self.isStop is True:
@@ -49,7 +48,7 @@ class PercentTimer(object):
 
     def getPercent(self):
         stop = time.time()
-        debug("Total time:" + str(self.TotalTime))
+        debug("Total time:" + str(self.total_time))
         #  throughTime = int((stop - self.start_time - self.stop_through) * 100 / self.total_time)
         throughTime = (stop - self.start_time - self.stop_through)
         debug("ThroughTime:" + str(throughTime))
