@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 20:38:47
+# Last modified: 2016-12-20 13:15:18
 
 import socket
 import da
@@ -93,6 +93,7 @@ class Switcher(CommandSwitchTableProto):
 
             # get filename if startprint is start
             data["File_Name"] = self.fileName
+            data["PrintPercent"] = 0
             if self.fileName is not "":
                 # add print time into data
                 data["PrintPercent"] = self.Timer.getPercent()
