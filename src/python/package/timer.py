@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-19 20:46:45
+# Last modified: 2016-12-20 13:18:48
 
 from __future__ import print_function
 import time
@@ -52,10 +52,12 @@ class PercentTimer(object):
         #  throughTime = int((stop - self.start_time - self.stop_through) * 100 / self.total_time)
         throughTime = (stop - self.start_time - self.stop_through)
         debug("ThroughTime:" + str(throughTime))
-        if(throughTime > 100):
-            return 100
         if(self.total_time != 0):
-            return int((throughTime / self.total_time) * 100)
+            percent = int((throughTime / self.total_time) * 100)
+            if(percent > 100):
+                return 100
+            else:
+                return percent
         else:
             print("set total time first!", file=sys.stderr)
             return 0
