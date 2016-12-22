@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-20 13:18:48
+# Last modified: 2016-12-20 14:17:35
 
 from __future__ import print_function
 import time
@@ -17,7 +17,7 @@ class PercentTimer(object):
         self.current_time = 0  # all time that stop print
         self.total_time = 0
         self.isStop = False
-        self.__CONST_HEATTIME = 90
+        self.__CONST_HEATTIME = 120
 
     @property
     def StartTime(self):

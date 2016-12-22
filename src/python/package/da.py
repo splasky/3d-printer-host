@@ -1,7 +1,6 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-30 20:57:38
+# Last modified: 2016-12-22 20:34:55
 
 import sys
 import time
@@ -299,27 +298,30 @@ def IR_temp():
 
 
 def get_Sensors_data(data={}):
+    try:
 
-    dict = DHT11_temp()
-    if dict is not None:
-        data["humidity"] = dict["humidity"]
-        data["temp"] = dict["temperature"]
-    else:
-        return None
+        dict = DHT11_temp()
+        if dict is not None:
+            data["humidity"] = dict["humidity"]
+            data["temp"] = dict["temperature"]
+        else:
+            return None
 
-    (g_x, g_y, g_z) = get_G_sensor()
-    data["g_x"] = g_x
-    data["g_y"] = g_y
-    data["g_z"] = g_z
+        (g_x, g_y, g_z) = get_G_sensor()
+        data["g_x"] = g_x
+        data["g_y"] = g_y
+        data["g_z"] = g_z
 
-    logging.debug("Temperature: {0} C".format(data["temp"]))
-    logging.debug("Humidity:    {0}%%".format(data["humidity"]))
+        logging.debug("Temperature: {0} C".format(data["temp"]))
+        logging.debug("Humidity:    {0}%%".format(data["humidity"]))
 
-    logging.debug("   x = {0}".format((g_x)))
-    logging.debug("   y = {0}".format((g_y)))
-    logging.debug("   z = {0}".format((g_z)))
+        logging.debug("   x = {0}".format((g_x)))
+        logging.debug("   y = {0}".format((g_y)))
+        logging.debug("   z = {0}".format((g_z)))
 
-    return data
+        return data
+    except:
+        PrintException()
 
 
 def SQLOperate(db, cursor, sqlcommand):

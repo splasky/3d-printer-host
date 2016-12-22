@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-20 13:15:18
+# Last modified: 2016-12-22 20:15:09
 
 import socket
 import da
@@ -10,6 +10,7 @@ import os
 import subprocess
 import shlex
 import multiprocessing
+import threading
 from package.thread_pool import ThreadPool
 from threading import Thread
 from time import sleep
@@ -23,7 +24,6 @@ from package import da
 from package import DHT11
 from package.est_time import es_time
 from package.timer import PercentTimer
-import threading
 
 
 # path to put gcode
@@ -67,12 +67,6 @@ class Switcher(CommandSwitchTableProto):
         def set_file_name(self, filename):
             self.fileName = filename
 
-        def __st_Sensors(self):
-            sensors_data = da.get_Sensors_data()
-            if sensors_data is not None:
-                sensors_data["IR_temperature"] = self.printcore.headtemp()
-                da.Send_Sensors(data=sensors_data)
-
         def Set_Print_Time(self, hour=0, miniute=0):
             self.print_time.hour = hour
             self.print_time.miniute = miniute
@@ -87,24 +81,35 @@ class Switcher(CommandSwitchTableProto):
         def CleanTimer(self):
             self.Timer.cleanTimer()
 
-        def __createJsonData(self):
-            # get printer status data
-            data = self.printcore.printer_status()
+        def __st_Sensors(self):
+            sensors_data = da.get_Sensors_data()
+            if sensors_data is not None:
+                sensors_data["IR_temperature"] = self.printcore.headtemp()
+                da.Send_Sensors(data=sensors_data)
 
-            # get filename if startprint is start
-            data["File_Name"] = self.fileName
-            data["PrintPercent"] = 0
-            if self.fileName is not "":
-                # add print time into data
-                data["PrintPercent"] = self.Timer.getPercent()
-            logging.debug(data)
-            return data
+        def __createJsonData(self):
+            try:
+
+                # get printer status data
+                data = self.printcore.printer_status()
+
+                # get filename if startprint is start
+                data["File_Name"] = self.fileName
+                data["PrintPercent"] = 0
+                if self.fileName is not "":
+                    # add print time into data
+                    data["PrintPercent"] = self.Timer.getPercent()
+                logging.debug(data)
+                return data
+            except:
+                PrintException()
 
         def Thread_InsertSensors(self):
             while self.stopped():
                 # inset sensors data into database
                 self.__st_Sensors()
                 sleep(1)
+                logging.debug("Sensors insert success")
 
         def SendJsonToRemote(self):
             S_printer_status(self.__createJsonData())
@@ -118,7 +123,6 @@ class Switcher(CommandSwitchTableProto):
         super(Switcher, self).__init__()
         # handlers
         self.printcore = None
-        #  self.__rtmpprocess = None
         self.sendData = None
         self.pool = ThreadPool(6)
 
@@ -146,8 +150,8 @@ class Switcher(CommandSwitchTableProto):
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         self.sendData = self.SendData(self.printcore)
         if self.printcore is not None:
-            self.pool.add_task(self.sendData.Thread_InsertSensors)
             self.pool.add_task(self.sendData.Thread_SendJsonData)
+            self.pool.add_task(self.sendData.Thread_InsertSensors)
         else:
             logging.error("Connect printer error!")
 
