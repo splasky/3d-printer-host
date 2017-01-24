@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-02 18:25:21
+# Last modified: 2016-12-26 18:35:19
 
 import socket
 import sys
@@ -19,7 +19,6 @@ from package.sock_proto import TCP_Server
 
 
 printer_status_path = "/var/www/3dprint/php/json/"
-FIFO = "/tmp/3dprinter.fifo"
 
 
 class PrinterStatusDaemon(threading.Thread):
@@ -50,8 +49,6 @@ def main():
         try:
             localServer.WaitForConnecting()
             command = localServer.Client.recv(1024)
-
-            #  command = raw_input("input:")
             command = command.split(" ", 2)
             if len(command) < 2:
                 print("error: must enter ip and port")
