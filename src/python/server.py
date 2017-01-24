@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-22 20:15:09
+# Last modified: 2017-01-20 16:31:40
 
 import socket
 import da
@@ -84,6 +84,8 @@ class Switcher(CommandSwitchTableProto):
         def __st_Sensors(self):
             sensors_data = da.get_Sensors_data()
             if sensors_data is not None:
+                if self.printcore.is_printing():
+                    sensors_data["IR_temperature"] = 200.0
                 sensors_data["IR_temperature"] = self.printcore.headtemp()
                 da.Send_Sensors(data=sensors_data)
 
@@ -107,9 +109,13 @@ class Switcher(CommandSwitchTableProto):
         def Thread_InsertSensors(self):
             while self.stopped():
                 # inset sensors data into database
-                self.__st_Sensors()
+                try:
+                    self.__st_Sensors()
+                    logging.debug("Sensors insert success")
+                except:
+                    PrintException()
+                    logging.debug("Sensors send failed")
                 sleep(1)
-                logging.debug("Sensors insert success")
 
         def SendJsonToRemote(self):
             S_printer_status(self.__createJsonData())
