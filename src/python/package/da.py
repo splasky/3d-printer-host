@@ -280,6 +280,7 @@ def DHT11_temp():
 
 
 def get_G_sensor():
+
     adxl345 = ADXL345()
     axes = adxl345.getAxes(True)
 
@@ -302,26 +303,16 @@ def IR_temp():
 
 def get_Sensors_data(data={}):
     try:
-
         dict = DHT11_temp()
         if dict is not None:
             data["humidity"] = dict["humidity"]
             data["temp"] = dict["temperature"]
         else:
             return None
-
-        (g_x, g_y, g_z) = get_G_sensor()
-        data["g_x"] = g_x
-        data["g_y"] = g_y
-        data["g_z"] = g_z
-
+        (data["g_x"], data["g_y"], data["g_z"]) = get_G_sensor()
         logging.debug("Temperature: {0} C".format(data["temp"]))
         logging.debug("Humidity:    {0}%%".format(data["humidity"]))
-
-        logging.debug("   x = {0}".format((g_x)))
-        logging.debug("   y = {0}".format((g_y)))
-        logging.debug("   z = {0}".format((g_z)))
-
+        logging.debug("G sensors: {0},{1},{2}".format(data["g_x"], data["g_y"], data["g_z"]))
         return data
     except:
         PrintException()
