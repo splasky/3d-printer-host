@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-12-22 20:34:55
+# Last modified: 2017-01-20 16:30:06
 
 import sys
 import time
@@ -121,6 +121,9 @@ class PrintCore(object):
     def disconnect(self):
         self.printcoreHandler.disconnect()
         print "py:disconnect..."
+
+    def is_printing(self):
+        return self.printcoreHandler.printing
 
     def reset(self):
         self.printcoreHandler.reset()
