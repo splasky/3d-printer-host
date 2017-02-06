@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-06 11:40:01
+# Last modified: 2017-02-06 12:04:07
 
 import socket
 import da
@@ -95,7 +95,9 @@ class Switcher(CommandSwitchTableProto):
             if sensors_data is not None:
                 if self.printcore.is_printing():
                     sensors_data["IR_temperature"] = 200.0
-                sensors_data["IR_temperature"] = self.printcore.headtemp()
+                else:
+                    sensors_data["IR_temperature"] = self.printcore.headtemp()
+
                 da.Send_Sensors(data=sensors_data)
 
         # data for sending in SendJsonToRemote()
@@ -116,6 +118,10 @@ class Switcher(CommandSwitchTableProto):
             except:
                 PrintException()
 
+        def SendJsonToRemote(self):
+            S_printer_status(self.__createJsonData())
+
+        # thread put into threadpool
         # insert for sensors data
         def Thread_InsertSensors(self):
             while self.stopped():
@@ -129,14 +135,11 @@ class Switcher(CommandSwitchTableProto):
                 sleep(1)
 
         # thread put into threadpool
-        def SendJsonToRemote(self):
-            S_printer_status(self.__createJsonData())
-
-        # thread put into threadpool
         def Thread_SendJsonData(self):
             while self.stopped():
                 self.SendJsonToRemote()
                 logging.debug("Send json data success")
+                sleep(1)
 
     def __init__(self):
         super(Switcher, self).__init__()
@@ -151,7 +154,7 @@ class Switcher(CommandSwitchTableProto):
     def getTask(self, command):
         try:
             listcommand = command.split(" ", 1)
-            print("command list:", listcommand)
+            print(("command list:", listcommand))
             if listcommand[0].strip() not in self.task:
                 self.Default()
                 return "No Command!"
@@ -212,7 +215,7 @@ class Switcher(CommandSwitchTableProto):
 
         try:
             filename = ClientFilePath.split("/")[-1]
-            print("receive file name", filename)
+            print(("receive file name", filename))
             self.sendData.set_file_name(filename)
             newfilepath = os.path.join(filepath, filename)
             self.sendData.CleanTimer()
@@ -256,7 +259,7 @@ def main():
                 logging.debug("command failed")
                 continue
             else:
-                print("Client send:" + src)
+                print(("Client send:" + src))
                 check = switcher.getTask(src)
                 sock.Client.send(check)
         except KeyboardInterrupt:
@@ -266,7 +269,7 @@ def main():
         except socket.timeout:
             print("Time out")
             PrintException()
-        except Exception, ex:
+        except Exception as ex:
             PrintException()
         finally:
             sock.Client.close()

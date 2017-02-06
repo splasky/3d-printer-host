@@ -4,7 +4,7 @@
 # Last modified: 2016-11-30 20:14:42
 
 
-from Queue import Queue
+from queue import Queue
 from threading import Thread
 
 
@@ -22,8 +22,8 @@ class Worker(Thread):
             func, args, kargs = self.tasks.get()
             try:
                 func(*args, **kargs)
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
             finally:
                 self.tasks.task_done()
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     delays = [randrange(1, 10) for i in range(100)]
 
     def wait_delay(d):
-        print 'sleeping for (%d)sec' % d
+        print('sleeping for (%d)sec' % d)
         sleep(d)
 
     pool = ThreadPool(20)

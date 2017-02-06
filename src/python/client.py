@@ -90,7 +90,7 @@ def main():
 
             # recv from server
             redata = Client.recv(1024)
-            print("recv data:", redata)
+            print(("recv data:", redata))
             Client.close()
             del Client
         except KeyboardInterrupt:

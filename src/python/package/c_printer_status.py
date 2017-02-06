@@ -9,14 +9,14 @@ import logging
 import os
 import signal
 import time
-from debug import PrintException
+from .debug import PrintException
 from package.sock_proto import Get_File_Client
 
 
 def C_printer_status(ReceivePath='/tmp/', Host='127.0.0.1', Port=6666):
     try:
         fileClient = Get_File_Client()
-        print("connect to :", Host)
+        print(("connect to :", Host))
         print("client printer status connecting...")
         fileClient.connect(Host, Port)
 
@@ -28,7 +28,7 @@ def C_printer_status(ReceivePath='/tmp/', Host='127.0.0.1', Port=6666):
     except socket.error:
         print("printer status server connect error")
         time.sleep(10)
-    except Exception, e:
+    except Exception as e:
         PrintException()
     finally:
         del fileClient

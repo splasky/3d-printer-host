@@ -3,11 +3,11 @@
 # vim:fenc=utf-8
 # Last modified: 2017-02-06 11:23:35
 
-from __future__ import print_function
+
 import time
 import sys
 from logging import debug
-from debug import PrintException
+from .debug import PrintException
 
 
 class Timer(object):

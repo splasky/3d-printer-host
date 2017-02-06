@@ -6,7 +6,7 @@ import sys
 import time
 import json
 import os
-import send
+from . import send
 import math
 import subprocess
 import re
@@ -22,7 +22,7 @@ import Adafruit_TMP.TMP006 as TMP006
 import MySQLdb
 import DHT11
 from scp import SCPClient  # not use
-from adxl345 import ADXL345
+from .adxl345 import ADXL345
 sys.path.append("/usr/lib/python2.7/site-packages/")
 from printrun.printcore import printcore
 from printrun import gcoder
@@ -120,38 +120,38 @@ class PrintCore(object):
 
     def disconnect(self):
         self.printcoreHandler.disconnect()
-        print "py:disconnect..."
+        print("py:disconnect...")
 
     def is_printing(self):
         return self.printcoreHandler.printing
 
     def reset(self):
         self.printcoreHandler.reset()
-        print'py:reset print'
+        print('py:reset print')
 
     def pause(self):
         self.printcoreHandler.pause()
-        print 'py:pause print'
+        print('py:pause print')
 
     def resume(self):
         self.printcoreHandler.resume()
-        print 'py:resume print'
+        print('py:resume print')
 
     def cancel(self):
         self.printcoreHandler.cancelprint()
         self.printcoreHandler.send_now("M104 S0")  # cool dowm
         self.printcoreHandler.send_now("G28")  # home
         self.printcoreHandler.send_now("M84")  # stepperoff
-        print "py:cancel print"
+        print("py:cancel print")
         time.sleep(3)
 
     def cooldown(self):
         self.printcoreHandler.send_now("M104 S0")
-        print 'py:cooldown'
+        print('py:cooldown')
 
     def home(self):
         self.printcoreHandler.send_now("G28")
-        print 'py:home'
+        print('py:home')
 
     def send_now(self, command):
         try:
@@ -163,7 +163,7 @@ class PrintCore(object):
 
     def startprint(self, file):
         try:
-            print 'start print...'
+            print('start print...')
             gcode = [i.strip() for i in open(file)]
             gcode = gcoder.LightGCode(gcode)
             self.printcoreHandler.startprint(gcode)
@@ -178,7 +178,7 @@ class PrintCore(object):
 
     def stepperoff(self):
         self.printcoreHandler.send_now("M84")
-        print 'py:stepper off'
+        print('py:stepper off')
 
     def printer_status(self):
         """get printer status into json file
@@ -259,8 +259,8 @@ def create_json_file(data):
         with open(os.path.abspath(fp), 'w') as file:
             file.write(beSended)
             return fp
-    except Exception, e:
-        print(e.args)
+    except Exception as e:
+        print((e.args))
         return None
 
 

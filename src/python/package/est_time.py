@@ -173,12 +173,12 @@ class es_time():
             minute = round(60 * ((self.time / 3600) - (round(math.floor(self.time / 3600)))))
             hour = round(math.floor(self.time / 3600))
 
-            print ("Estimated print time: {} hours {} minutes".format(hour, minute))
+            print(("Estimated print time: {} hours {} minutes".format(hour, minute)))
             # ------------------------------------------------------------------------------------------------------
             return (hour, minute)
 
         except:
-            print 'something wrong'
+            print('something wrong')
 
         finally:
-            print 'finished'
+            print('finished')
