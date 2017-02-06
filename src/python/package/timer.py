@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-01-24 18:10:17
+# Last modified: 2017-02-06 11:23:35
 
 from __future__ import print_function
 import time
 import sys
 from logging import debug
+from debug import PrintException
 
 
 class Timer(object):
@@ -40,8 +41,8 @@ class Timer(object):
     def reset(self):
         self.elapsed = 0.0
 
-    @property
-    def running(self):
+    @propetrty
+    def isrunning(self):
         return self._start is not None
 
     def __enter__(self):
@@ -54,7 +55,7 @@ class Timer(object):
 
 class PercentTimer(Timer):
 
-    def __init__(self, value):
+    def __init__(self, value=0):
         super(PercentTimer, self).__init__()
         if value < 0:
             raise ValueError('Total Time must more than 0!')
@@ -63,23 +64,29 @@ class PercentTimer(Timer):
         self.total_time = round(value + self.__CONST_HEATTIME)
 
     def set_total_time(self, value):
-        if value < 0:
+        if value <= 0:
             raise ValueError('Total Time must more than 0!')
         self.total_time = round(value + self.__CONST_HEATTIME)
 
+    # get timer elapsed percent
     def getPercent(self):
+        if self.total_time <= 0:
+            raise ValueError('Total Time must more than 0!')
         elapsed = self.get_elapsed()
         debug("Total time:" + str(self.total_time))
         debug("Through time:" + str(elapsed))
-        if(self.total_time > 0):
-            percent = round((elapsed / self.total_time) * 100)
-            if(percent < 100):
-                return percent
+        try:
+            if(self.total_time > 0):
+                percent = round((elapsed / self.total_time) * 100)
+                if(percent < 100):
+                    return percent
+                else:
+                    return 100
             else:
-                return 100
-        else:
-            raise ValueError('set total time first!')
-            return 0
+                raise ValueError('set total time first!')
+                return 0
+        except:
+            PrintException()
 
     def cleanTimer(self):
         self.reset()
