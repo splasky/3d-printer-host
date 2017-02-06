@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-01-20 16:31:40
+# Last modified: 2017-02-06 11:40:01
 
 import socket
 import da
@@ -30,38 +30,47 @@ from package.timer import PercentTimer
 filepath = "/home/pi/temp/"
 
 
+class Print_time(object):
+
+    def __init__(self):
+        self.hour = 0
+        self.miniute = 0
+
+    @property
+    def getHour(self):
+        return self.hour
+
+    @property
+    def getMiniute(self):
+        return self.miniute
+
+    def getTime(self):
+        return self.hour * 60 + self.miniute
+
+
 class Switcher(CommandSwitchTableProto):
 
     class SendData(object):
-
-        class Print_time(object):
-
-            def __init__(self):
-                self.hour = 0
-                self.miniute = 0
-
-            @property
-            def getHour(self):
-                return self.hour
-
-            @property
-            def getMiniute(self):
-                return self.miniute
-
-            def getTime(self):
-                return self.hour * 60 + self.miniute
+        '''
+        class for control send json data and environment data.
+        '''
 
         def __init__(self, printercore):
+            # printcore object to get printcore information
             self.printcore = printercore
+            # get gcode file name
             self.fileName = ""
+            # thread condition
             self.lock = True
+            # print time object,store print time
             self.print_time = self.Print_time()
+            # percent timer object
             self.Timer = PercentTimer()
 
         def stopRunning(self):
             self.lock = False
 
-        def stopped(self):
+        def isstopped(self):
             return self.lock
 
         def set_file_name(self, filename):
@@ -70,13 +79,13 @@ class Switcher(CommandSwitchTableProto):
         def Set_Print_Time(self, hour=0, miniute=0):
             self.print_time.hour = hour
             self.print_time.miniute = miniute
-            self.Timer.TotalTime = (hour * 60 + miniute) * 60
+            self.Timer.set_total_time((hour * 60 + miniute) * 60)
 
         def StopTimer(self):
-            self.Timer.stopTimer()
+            self.Timer.stop()
 
         def StartTimer(self):
-            self.Timer.startTimer()
+            self.Timer.start()
 
         def CleanTimer(self):
             self.Timer.cleanTimer()
@@ -89,6 +98,7 @@ class Switcher(CommandSwitchTableProto):
                 sensors_data["IR_temperature"] = self.printcore.headtemp()
                 da.Send_Sensors(data=sensors_data)
 
+        # data for sending in SendJsonToRemote()
         def __createJsonData(self):
             try:
 
@@ -106,6 +116,7 @@ class Switcher(CommandSwitchTableProto):
             except:
                 PrintException()
 
+        # insert for sensors data
         def Thread_InsertSensors(self):
             while self.stopped():
                 # inset sensors data into database
@@ -117,9 +128,11 @@ class Switcher(CommandSwitchTableProto):
                     logging.debug("Sensors send failed")
                 sleep(1)
 
+        # thread put into threadpool
         def SendJsonToRemote(self):
             S_printer_status(self.__createJsonData())
 
+        # thread put into threadpool
         def Thread_SendJsonData(self):
             while self.stopped():
                 self.SendJsonToRemote()
@@ -128,23 +141,29 @@ class Switcher(CommandSwitchTableProto):
     def __init__(self):
         super(Switcher, self).__init__()
         # handlers
+        # printcore handler
         self.printcore = None
+        # handler for send json file and insert environment data
         self.sendData = None
+        # thread pool handler
         self.pool = ThreadPool(6)
 
     def getTask(self, command):
-        listcommand = command.split(" ", 1)
-        print("command list:", listcommand)
-        if listcommand[0].strip() not in self.task:
-            self.Default()
-            return "No Command!"
+        try:
+            listcommand = command.split(" ", 1)
+            print("command list:", listcommand)
+            if listcommand[0].strip() not in self.task:
+                self.Default()
+                return "No Command!"
 
-        da.Insert_logs(listcommand[0])
-        if len(listcommand) > 1:
-            self.task.get(listcommand[0].strip())(listcommand[1].strip())
-        else:
-            self.task.get(listcommand[0].strip())()
-        return "Command Send Success"
+            da.Insert_logs(listcommand[0])
+            if len(listcommand) > 1:
+                self.task.get(listcommand[0].strip())(listcommand[1].strip())
+            else:
+                self.task.get(listcommand[0].strip())()
+            return "Command Send Success"
+        except:
+            PrintException()
 
     def __check_gcode(self, filename):
         if filename.split(".")[-1] == "gcode":
@@ -153,6 +172,7 @@ class Switcher(CommandSwitchTableProto):
             return False
 
     def connect(self):
+        # TODO:bad connect method
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         self.sendData = self.SendData(self.printcore)
         if self.printcore is not None:
@@ -202,8 +222,8 @@ class Switcher(CommandSwitchTableProto):
 
                 # set print time!
                 est_time = es_time(newfilepath)
-                (x, y) = est_time.estime()
-                self.sendData.Set_Print_Time(x, y)
+                (hours, miniutes) = est_time.estime()
+                self.sendData.Set_Print_Time(hours, miniutes)
                 self.sendData.StartTimer()
 
                 self.pool.add_task(
