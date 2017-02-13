@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-01-20 16:30:06
+# Last modified: 2017-02-13 17:31:08
 
 import sys
 import time
@@ -18,11 +18,11 @@ from package.debug import PrintException
 
 
 # Third party
-import Adafruit_TMP.TMP006 as TMP006
 import MySQLdb
 import DHT11
-from scp import SCPClient  # not use
-from .adxl345 import ADXL345
+from package import TMP006
+from adxl345 import ADXL345
+# import from 3trd party lib
 sys.path.append("/usr/lib/python2.7/site-packages/")
 from printrun.printcore import printcore
 from printrun import gcoder
@@ -281,24 +281,32 @@ def DHT11_temp():
 
 def get_G_sensor():
 
-    adxl345 = ADXL345()
-    axes = adxl345.getAxes(True)
+    try:
 
-    g_x = (axes['x'])
-    g_y = (axes['y'])
-    g_z = (axes['z'])
+        adxl345 = ADXL345()
+        axes = adxl345.getAxes(True)
 
-    return g_x, g_y, g_z
+        g_x = (axes['x'])
+        g_y = (axes['y'])
+        g_z = (axes['z'])
+
+        return g_x, g_y, g_z
+    except:
+        PrintException()
+        return None
 
 
 def IR_temp():
-    # IR Temperature:
-    sensor = TMP006.TMP006()
-    sensor.begin()
-    obj_temp = sensor.readObjTempC()
-    die_temp = sensor.readDieTempC()
-
-    return obj_temp
+    try:
+        # IR Temperature:
+        sensor = TMP006.TMP006()
+        sensor.begin()
+        obj_temp = sensor.readObjTempC()
+        die_temp = sensor.readDieTempC()
+        return obj_temp
+    except:
+        PrintException()
+        return None
 
 
 def get_Sensors_data(data={}):
@@ -316,6 +324,7 @@ def get_Sensors_data(data={}):
         return data
     except:
         PrintException()
+        return None
 
 
 def SQLOperate(db, cursor, sqlcommand):
