@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-06 11:23:35
+# Last modified: 2017-02-13 18:43:23
 
 
 import time
@@ -26,8 +26,6 @@ class Timer(object):
         self._start = self._func()
 
     def stop(self):
-        if self._start is None:
-            raise RuntimeError('Not started')
         end = self._func()
         self.elapsed += round(end - self._start)
         self._start = None
@@ -41,7 +39,7 @@ class Timer(object):
     def reset(self):
         self.elapsed = 0.0
 
-    @propetrty
+    @property
     def isrunning(self):
         return self._start is not None
 
