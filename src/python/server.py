@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-06 12:04:07
+# Last modified: 2017-02-13 18:40:01
 
 import socket
-import da
 import sys
 import logging
 import os
@@ -11,6 +10,7 @@ import subprocess
 import shlex
 import multiprocessing
 import threading
+
 from package.thread_pool import ThreadPool
 from threading import Thread
 from time import sleep
@@ -63,7 +63,7 @@ class Switcher(CommandSwitchTableProto):
             # thread condition
             self.lock = True
             # print time object,store print time
-            self.print_time = self.Print_time()
+            self.print_time = Print_time()
             # percent timer object
             self.Timer = PercentTimer()
 
@@ -108,23 +108,27 @@ class Switcher(CommandSwitchTableProto):
                 data = self.printcore.printer_status()
 
                 # get filename if startprint is start
-                data["File_Name"] = self.fileName
                 data["PrintPercent"] = 0
+                data["File_Name"] = ""
                 if self.fileName is not "":
                     # add print time into data
                     data["PrintPercent"] = self.Timer.getPercent()
+                    data["File_Name"] = self.fileName
                 logging.debug(data)
                 return data
             except:
                 PrintException()
+                return None
 
         def SendJsonToRemote(self):
-            S_printer_status(self.__createJsonData())
+            data = self.__createJsonData()
+            if data is not None:
+                S_printer_status(data)
 
         # thread put into threadpool
         # insert for sensors data
         def Thread_InsertSensors(self):
-            while self.stopped():
+            while self.isstopped():
                 # inset sensors data into database
                 try:
                     self.__st_Sensors()
@@ -136,9 +140,13 @@ class Switcher(CommandSwitchTableProto):
 
         # thread put into threadpool
         def Thread_SendJsonData(self):
-            while self.stopped():
-                self.SendJsonToRemote()
-                logging.debug("Send json data success")
+            while self.isstopped():
+                try:
+                    self.SendJsonToRemote()
+                    logging.debug("Send json data success")
+                except:
+                    PrintException()
+                    logging.debug("Send json data failed")
                 sleep(1)
 
     def __init__(self):
@@ -167,6 +175,7 @@ class Switcher(CommandSwitchTableProto):
             return "Command Send Success"
         except:
             PrintException()
+            return "Server failed"
 
     def __check_gcode(self, filename):
         if filename.split(".")[-1] == "gcode":
