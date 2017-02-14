@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-13 18:40:01
+# Last modified: 2017-02-14 19:10:33
 
 import socket
 import sys
@@ -251,16 +251,16 @@ class Switcher(CommandSwitchTableProto):
 
 
 def main():
-    DHT11.Init_WiringPi()
-    sock = TCP_Server()
-    switcher = Switcher()
+    try:
+        sock = TCP_Server()
+        DHT11.Init_WiringPi()
+        switcher = Switcher()
 
-    # prepare for file directory
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
+        # prepare for file directory
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
 
-    while True:
-        try:
+        while True:
             logging.debug("server accept")
             sock.WaitForConnecting()
             src = sock.Client.recv(1024)
@@ -271,22 +271,21 @@ def main():
                 print(("Client send:" + src))
                 check = switcher.getTask(src)
                 sock.Client.send(check)
-        except KeyboardInterrupt:
-            print("KeyboardInterrupt! Stop server")
-            sys.exit(0)
-            break
-        except socket.timeout:
-            print("Time out")
-            PrintException()
-        except Exception as ex:
-            PrintException()
-        finally:
             sock.Client.close()
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt! Stop server")
+        sys.exit(0)
+    except socket.timeout:
+        print("Time out")
+        PrintException()
+    except:
+        PrintException()
+        main()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     try:
-        logging.basicConfig(level=logging.DEBUG)
         main()
     except KeyboardInterrupt:
         print("KeyboardInterrupt! Stop server")
