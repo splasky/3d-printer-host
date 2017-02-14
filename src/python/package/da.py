@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-13 17:31:08
+# Last modified: 2017-02-14 19:38:23
 
 import sys
 import time
@@ -22,7 +22,7 @@ import MySQLdb
 import DHT11
 from package import TMP006
 from adxl345 import ADXL345
-# import from 3trd party lib
+# import from 3rd party lib
 sys.path.append("/usr/lib/python2.7/site-packages/")
 from printrun.printcore import printcore
 from printrun import gcoder
@@ -274,9 +274,9 @@ def DHT11_temp():
     if checksum == 0:
         return None
     else:
-        dict = {"humidity": humidity, "humidityfloat": humidityfloat,
+        data = {"humidity": humidity, "humidityfloat": humidityfloat,
                 "temperature": temperature, "temperaturefloat": temperaturefloat}
-        return dict
+        return data
 
 
 def get_G_sensor():
@@ -320,7 +320,8 @@ def get_Sensors_data(data={}):
         (data["g_x"], data["g_y"], data["g_z"]) = get_G_sensor()
         logging.debug("Temperature: {0} C".format(data["temp"]))
         logging.debug("Humidity:    {0}%%".format(data["humidity"]))
-        logging.debug("G sensors: {0},{1},{2}".format(data["g_x"], data["g_y"], data["g_z"]))
+        logging.debug("G sensors: {0},{1},{2}".format(
+            data["g_x"], data["g_y"], data["g_z"]))
         return data
     except:
         PrintException()
