@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-14 19:10:33
+# Last modified: 2017-02-14 19:21:10
 
 import socket
 import sys
@@ -11,19 +11,19 @@ import shlex
 import multiprocessing
 import threading
 
-from package.thread_pool import ThreadPool
 from threading import Thread
 from time import sleep
 from package.send import upload_server
+from package.thread_pool import ThreadPool
 from package.s_printer_status import S_printer_status
 from package.debug import PrintException
 from package.sock_proto import TCP_Server
 from package.da import PrintCore
 from package.da import CommandSwitchTableProto
-from package import da
-from package import DHT11
 from package.est_time import es_time
 from package.timer import PercentTimer
+from package import da
+from package import DHT11
 
 
 # path to put gcode
@@ -261,17 +261,20 @@ def main():
             os.makedirs(filepath)
 
         while True:
-            logging.debug("server accept")
-            sock.WaitForConnecting()
-            src = sock.Client.recv(1024)
-            if not src:
-                logging.debug("command failed")
-                continue
-            else:
-                print(("Client send:" + src))
-                check = switcher.getTask(src)
-                sock.Client.send(check)
-            sock.Client.close()
+            try:
+                logging.debug("server accept")
+                sock.WaitForConnecting()
+                src = sock.Client.recv(1024)
+                if not src:
+                    logging.debug("command failed")
+                    continue
+                else:
+                    print(("Client send:" + src))
+                    check = switcher.getTask(src)
+                    sock.Client.send(check)
+                sock.Client.close()
+            except:
+                PrintException()
     except KeyboardInterrupt:
         print("KeyboardInterrupt! Stop server")
         sys.exit(0)
