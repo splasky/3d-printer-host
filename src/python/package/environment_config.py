@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-13 17:08:17
+# Last modified: 2017-04-13 17:26:03
 
 import json
-from debug import PrintException
+from package.debug import PrintException
 import getpass
 DEFAULTPATH = "/tmp/3dprinter_config"
 
@@ -15,6 +15,7 @@ class config_data(object):
         self.DataBase_IP = ""
         self.DataBase_User = ""
         self.DataBase_Password = ""
+        self.DataBase_Name = ""
         self.DataBase_Port = 0
 
 
@@ -26,7 +27,8 @@ class UseConfigs(object):
     def make_input(self):
         config = dict()
         config["DataBase_IP"] = raw_input("data base ip:")
-        config["DataBase_User"] = raw_input("data base user name:")
+        config["DataBase_Name"] = getpass.getpass("data base name:")
+        config["DataBase_User"] = raw_input("data base login name:")
         config["DataBase_Password"] = getpass.getpass("data base password:")
         config["DataBase_Port"] = int(raw_input("data base port:"))
         return config
@@ -54,7 +56,7 @@ class UseConfigs(object):
         except:
             PrintException()
 
-    def print_configs(self):
+    def print_config(self):
         print(self.config)
 
     def modify_config(self, path=DEFAULTPATH):
