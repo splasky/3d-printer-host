@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-24 17:36:45
+# Last modified: 2017-02-24 17:42:41
 
 import socket
 import sys
@@ -11,6 +11,7 @@ import time
 import json
 import fcntl
 import threading
+import subprocess
 from subprocess import Popen
 from package.send import upload_client
 from package.c_printer_status import C_printer_status
@@ -55,7 +56,7 @@ def offline():
             fcntl.lockf(file, fcntl.LOCK_EX)
             data = PrinterJson()
             file.write(data)
-        Popen([mjpg_path, "stop"])
+        subprocess.call([mjpg_path, "stop"])
     except:
         logging.debug("error when write to printer.json")
 
