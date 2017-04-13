@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-13 17:31:08
+# Last modified: 2017-04-13 18:07:22
 
 import sys
 import time
@@ -110,9 +110,11 @@ class CommandSwitchTableProto(object):
 
 
 class PrintCore(object):
+    Port = '/dev/ttyUSB0'
+    Baud = 250000
 
-    def __init__(self, Port='/dev/ttyUSB0', Baud=250000):
-        self.printcoreHandler = printcore(port=Port, baud=Baud)
+    def __init__(self, port='/dev/ttyUSB0', baud=250000):
+        self.printcoreHandler = printcore(port=port, baud=baud)
         try:
             self.printcoreHandler.logl
         except:
@@ -320,97 +322,65 @@ def get_Sensors_data(data={}):
         (data["g_x"], data["g_y"], data["g_z"]) = get_G_sensor()
         logging.debug("Temperature: {0} C".format(data["temp"]))
         logging.debug("Humidity:    {0}%%".format(data["humidity"]))
-        logging.debug("G sensors: {0},{1},{2}".format(data["g_x"], data["g_y"], data["g_z"]))
+        logging.debug("G sensors: {0},{1},{2}".format(
+            data["g_x"], data["g_y"], data["g_z"]))
         return data
     except:
         PrintException()
         return None
 
 
-def SQLOperate(db, cursor, sqlcommand):
-    AVG = 'UPDATE static set avg=(SELECT AVG(IR_temperature) FROM env_data)'
-    static = 'select * from static'
+class SqlManager(object):
 
-    # Execute the SQL command
+    def __init__(self, host, user, password, database, port):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.port = port
+        self.db_hander = MySQLdb.connect(host, user, password, database, port)
+        self.cursor = self.db_hander.cursor()
 
-    n = 1000
+    def __del__(self):
+        self.cursor.close()
+        self.db_hander.close()
+        logging.debug("close SqlManager success")
 
-    cursor.execute(sqlcommand)
-    db.commit()
-    cursor.execute(AVG)
-    db.commit()
-
-    # Commit your changes in the database
-    cursor.execute(static)
-    each_row_of_static = cursor.fetchall()
-
-    for row in each_row_of_static:
-
-        x = row[0]
-
-        std = row[1]
-
-    ans = x + 1.96 * std / math.sqrt(n)
-    low = x - 1.96 * std / math.sqrt(n)
-
-    sqlforcheck = 'UPDATE static set check_value_high={} '.format(ans)
-    sqllowcheck = 'UPDATE static set check_value_low={} '.format(low)
-    cursor.execute(sqlforcheck)
-    cursor.execute(sqllowcheck)
-    db.commit()
-
-
-def Send_Sensors(host="163.17.135.169", user="pi", password="raspberry", database="libRaspberry", port=3306, data={}):
-    try:
-        db = MySQLdb.connect(host, user, password, database, port)
-        cursor = db.cursor()
-        # Run the DHT program to get the humidity and temperature readings!
-
-        sql = "Insert into env_data(humidity,temperature,x_axis,y_axis,z_axis,IR_temperature) values({},{},{},{},{},{})".format(
-            data["humidity"],
-            data["temp"],
-            data["g_x"],
-            data["g_y"],
-            data["g_z"],
-            float(data["IR_temperature"])
-        )
-
-        # Prepare SQL query to INSERT a record into the database.
-
+    def SQLOperate(self, sqlcommand):
         try:
-            SQLOperate(db, cursor, sql)
+            # Execute the SQL command
+            self.cursor.execute(sqlcommand)
+            self.db_hander.commit()
+        except:
+            PrintException()
+
+    def Send_Sensors(self, data={}):
+        try:
+            # Prepare SQL query to INSERT a record into the database.
+            sql = "Insert into env_data(humidity,temperature,x_axis,y_axis,z_axis,IR_temperature) values({},{},{},{},{},{})".format(
+                data["humidity"],
+                data["temp"],
+                data["g_x"],
+                data["g_y"],
+                data["g_z"],
+                float(data["IR_temperature"])
+            )
+
+            self.SQLOperate(sql)
             logging.debug('Insert sensors_data success')
         except:
             # Rollback in case there is any error
-            db.rollback()
+            self.db_hander.rollback()
             logging.error("Insert error,database rollback.")
             logging.debug(sql)
             PrintException()
-    except:
-        db.close()
 
-
-def Insert_logs(event, host="163.17.135.169", user="pi", password="raspberry", database="libRaspberry", port=3306):
-    try:
-        db = MySQLdb.connect(host, user, password, database, port)
-        cursor = db.cursor()
+    def Insert_logs(self, event):
         try:
             sql = "insert into logs(event) values('{}');".format(event)
-            cursor.execute(sql)
-            db.commit()
+            self.SQLOperate(sql)
             logging.debug("Insert log success")
-            cursor.close()
-            db.close()
         except:
-            db.rollback()
+            self.db_hander.rollback()
             logging.error("Insert log error")
             PrintException()
-            cursor.close()
-            db.close()
-    except:
-        logging.error("connect database error")
-        PrintException()
-
-
-if __name__ == "__main__":
-    Send_Sensors()
