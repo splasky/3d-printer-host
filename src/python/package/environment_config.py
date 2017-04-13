@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-14 18:52:12
+# Last modified: 2017-04-13 17:08:17
 
 import json
-from package.debug import PrintException
-
+from debug import PrintException
+import getpass
 DEFAULTPATH = "/tmp/3dprinter_config"
 
 
@@ -15,30 +15,51 @@ class config_data(object):
         self.DataBase_IP = ""
         self.DataBase_User = ""
         self.DataBase_Password = ""
+        self.DataBase_Port = 0
+
+
+class UseConfigs(object):
+
+    def __init__(self):
+        self.config = dict()
+
+    def make_input(self):
+        config = dict()
+        config["DataBase_IP"] = raw_input("data base ip:")
+        config["DataBase_User"] = raw_input("data base user name:")
+        config["DataBase_Password"] = getpass.getpass("data base password:")
+        config["DataBase_Port"] = int(raw_input("data base port:"))
+        return config
 
     def make_config(self, path=DEFAULTPATH):
-        self.DataBase_IP = raw_input("data base ip:")
-        self.DataBase_User = raw_input("data base user:")
-        self.DataBase_Password = raw_input("data base password:")
-
         try:
+            self.config = self.make_input()
             with open(path, 'w') as f:
                 f.write(json.dumps(
-                    {"DataBase_IP": self.DataBase_IP, "DataBase_User": self.DataBase_User,
-                        "DataBase_Password": self.DataBase_Password}
+                    self.config, separators=(',', ':'), sort_keys=True,
                 ).encode('utf-8'))
         except:
             PrintException()
 
     def load_config(self, path=DEFAULTPATH):
-        if path is "":
-            raise RuntimeError("path is not correct!")
         try:
+            if path is "":
+                raise RuntimeError("path is not correct!")
+
             with open(path, "r") as f:
                 data = f.read()
                 config = json.loads(data)
-                self.DataBase_IP = config["DataBase_IP"]
-                self.DataBase_User = config["DataBase_User"]
-                self.DataBase_Password = config["DataBase_Password"]
+                self.config = dict((key, value) for key, value in config.items())
+
+        except:
+            PrintException()
+
+    def print_configs(self):
+        print(self.config)
+
+    def modify_config(self, path=DEFAULTPATH):
+        try:
+            self.make_config(path)
+            print("Change config file success.")
         except:
             PrintException()
