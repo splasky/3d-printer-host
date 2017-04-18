@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-13 17:26:03
+# Last modified: 2017-04-18 15:49:54
 
 import json
 from package.debug import PrintException
+import getpass
 import getpass
 DEFAULTPATH = "/tmp/3dprinter_config"
 
@@ -15,6 +16,7 @@ class config_data(object):
         self.DataBase_IP = ""
         self.DataBase_User = ""
         self.DataBase_Password = ""
+        self.DataBase_Name = ""
         self.DataBase_Name = ""
         self.DataBase_Port = 0
 

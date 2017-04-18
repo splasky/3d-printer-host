@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-13 18:43:23
+# Last modified: 2017-02-24 18:18:48
 
 
 import time
@@ -75,7 +75,7 @@ class PercentTimer(Timer):
         debug("Through time:" + str(elapsed))
         try:
             if(self.total_time > 0):
-                percent = round((elapsed / self.total_time) * 100)
+                percent = round(elapsed / self.total_time) * 100
                 if(percent < 100):
                     return percent
                 else:

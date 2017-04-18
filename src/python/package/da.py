@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-13 18:07:22
+# Last modified: 2017-04-18 15:44:47
 
 import sys
 import time
@@ -15,14 +15,14 @@ import logging
 
 from abc import ABCMeta, abstractmethod
 from package.debug import PrintException
-
+from datetime import datetime
 
 # Third party
 import MySQLdb
 import DHT11
 from package import TMP006
 from adxl345 import ADXL345
-# import from 3trd party lib
+# import from third party lib
 sys.path.append("/usr/lib/python2.7/site-packages/")
 from printrun.printcore import printcore
 from printrun import gcoder
@@ -113,8 +113,8 @@ class PrintCore(object):
     Port = '/dev/ttyUSB0'
     Baud = 250000
 
-    def __init__(self, port='/dev/ttyUSB0', baud=250000):
-        self.printcoreHandler = printcore(port=port, baud=baud)
+    def __init__(self, Port='/dev/ttyUSB0', Baud=250000):
+        self.printcoreHandler = printcore(port=Port, baud=Baud)
         try:
             self.printcoreHandler.logl
         except:
@@ -276,9 +276,9 @@ def DHT11_temp():
     if checksum == 0:
         return None
     else:
-        dict = {"humidity": humidity, "humidityfloat": humidityfloat,
+        data = {"humidity": humidity, "humidityfloat": humidityfloat,
                 "temperature": temperature, "temperaturefloat": temperaturefloat}
-        return dict
+        return data
 
 
 def get_G_sensor():
