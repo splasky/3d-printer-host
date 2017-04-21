@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 13:24:54
+# Last modified: 2017-04-21 14:57:35
 
 import logging
 import os
@@ -155,17 +155,17 @@ class Switcher(CommandSwitchTableProto):
             print(("command list:", listcommand))
             if listcommand[0].strip() not in self.task:
                 self.Default()
-                return "No Command!"
+                return False
 
             da.Insert_logs(listcommand[0])
             if len(listcommand) > 1:
                 self.task.get(listcommand[0].strip())(listcommand[1].strip())
             else:
                 self.task.get(listcommand[0].strip())()
-            return "Command Send Success"
+            return True
         except:
             PrintException()
-            return "Command is failed"
+            return False
 
     def connect(self):
         # TODO:bad connect method

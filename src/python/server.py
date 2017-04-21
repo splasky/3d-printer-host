@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 14:36:23
+# Last modified: 2017-04-21 14:45:07
 
+import os
 from package.debug import PrintException
 from package.Switcher import Switcher
 from package.redis_object import redis_handler
@@ -13,7 +14,7 @@ class Server(object):
 
     def __init__(self, Directory="/home/pi/Rpi3dPrinter"):
         self.directory = os.path.join(Directory)
-        self.check_director(self.directory)
+        self.check_directory()
         self.config_file_path = os.path.join(self.directory, "config_file.json")
         DHT11.Init_WiringPi()
         self.switcher = Switcher(redis_handler, self.directory)
@@ -41,7 +42,7 @@ class Server(object):
         except:
             PrintException()
 
-    def check_director(self):
+    def check_directory(self):
         # check directory is exists
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)

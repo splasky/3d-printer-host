@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 14:37:09
+# Last modified: 2017-04-21 14:50:07
 
-import server
+from server import Server
 import redis
 import pytest
 import tempfile
@@ -30,17 +30,17 @@ def master():
     return redis.StrictRedis(host=base.host, port=base.port)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def server(cleandir):
     return Server(cleandir)
 
 
 def test_main(server, master):
     server.run_main()
-    master.publish('control', 'connect')
-    master.publish('control', 'home')
-    master.publish('control', 'send_now G28')
+    assert master.publish('control', 'connect')
+    assert master.publish('control', 'home')
+    assert master.publish('control', 'send_now G28')
     #  master.publish('control','startprint xxxx')
-    master.publish('control', 'Helloworld!')
-    master.publish('control', 'Hello world!')
-    master.publish('control', 'disconnect')
+    assert master.publish('control', 'Helloworld!')
+    assert master.publish('control', 'Hello world!')
+    assert master.publish('control', 'disconnect')
