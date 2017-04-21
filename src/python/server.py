@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-14 19:21:10
+# Last modified: 2017-04-21 09:45:04
 
 import socket
 import sys
@@ -24,10 +24,8 @@ from package.est_time import es_time
 from package.timer import PercentTimer
 from package import da
 from package import DHT11
-
-
-# path to put gcode
-filepath = "/home/pi/temp/"
+from package.environment_config import UseConfigs
+from package.redis_object import redis_handler
 
 
 class Print_time(object):
@@ -242,56 +240,58 @@ class Switcher(CommandSwitchTableProto):
                     self.printcore.startprint(newfilepath)
                 )
             else:
-                print("not gcode file")
+                print("not a gcode file")
         except:
             PrintException()
 
     def Default(self):
-        print("no command")
+        logging.debug("no command")
 
 
-def main():
-    try:
-        sock = TCP_Server()
+class Server(object):
+
+    def __init__(self, Directory):
+        self.directory = Directory
+        self.config_file_path = os.path.join(Directory, "config_file.json")
         DHT11.Init_WiringPi()
-        switcher = Switcher()
+        self.switcher = Switcher()
+        self.config = UseConfigs(self.config_file_path)
+        self.redis_handler = redis_handler(Host=self.config.config["redis_ip"],
+                                           Port=self.config.config["redis_port"],
+                                           master=self.config.config["redis_master"],
+                                           slaver=self.config.config["slaver"])
 
-        # prepare for file directory
-        if not os.path.exists(filepath):
-            os.makedirs(filepath)
-
-        while True:
-            try:
-                logging.debug("server accept")
-                sock.WaitForConnecting()
-                src = sock.Client.recv(1024)
-                if not src:
-                    logging.debug("command failed")
-                    continue
-                else:
+    def run_main(self):
+        try:
+            self.check_config()
+            while True:
+                try:
+                    logging.debug("server accept")
+                    # wait for message
+                    src = self.sock.Client.recv(1024)
                     print(("Client send:" + src))
-                    check = switcher.getTask(src)
-                    sock.Client.send(check)
-                sock.Client.close()
-            except:
-                PrintException()
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt! Stop server")
-        sys.exit(0)
-    except socket.timeout:
-        print("Time out")
-        PrintException()
-    except:
-        PrintException()
-        main()
+                    check = self.switcher.getTask(src)
+                    redis_handler.send(check)
+                except:
+                    PrintException()
+        except KeyboardInterrupt:
+            print("KeyboardInterrupt! Stop server")
+            sys.exit(0)
+        except:
+            PrintException()
+
+    def check_config(self):
+        # check directory is exists
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+
+        if self.config.check_config():
+            self.config.make_config(self.config_file_path)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt! Stop server")
-        sys.exit(0)
-    except:
-        PrintException()
+    # path to put gcode
+    directory = "/home/pi/Rpi3dPrinter"
+    server = Server(directory)
+    server.run_main()
