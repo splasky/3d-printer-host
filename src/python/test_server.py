@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 14:25:34
+# Last modified: 2017-04-21 14:37:09
 
-from package import server
+import server
 import redis
 import pytest
 import tempfile
