@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-24 17:42:41
+# Last modified: 2017-04-18 16:40:21
 
 import socket
 import sys
@@ -20,7 +20,7 @@ from package.sock_proto import TCP_Client
 from package.sock_proto import TCP_Server
 
 
-printer_status_path = "/var/www/3dprint/php/json/"
+printer_status_path = os.path.join("/var/www/3dprint/php/json/")
 printer_status_file = path = printer_status_path + "printer.json"
 mjpg_path = "/home/pi/mjpg-streamer/mjpg-streamer.sh"
 
