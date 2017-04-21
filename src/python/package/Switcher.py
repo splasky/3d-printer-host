@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 17:39:53
+# Last modified: 2017-04-21 18:16:58
 
 import logging
 import os
@@ -113,7 +113,7 @@ class Switcher(CommandSwitchTableProto):
                     all_data.update(data)
                     all_data.update(sensors_data)
 
-                    return all_data
+                    yield all_data
                 except:
                     PrintException()
 
@@ -128,6 +128,8 @@ class Switcher(CommandSwitchTableProto):
         self.pool = ThreadPool(6)
         self.redis_handler = redis
         self.directory = directory
+        self.genrator = None
+        self.connected = False
 
     def getTask(self, command):
         try:
@@ -146,18 +148,29 @@ class Switcher(CommandSwitchTableProto):
             PrintException()
             return False
 
-    def connect(self):
-        # TODO:bad connect method
+    def Thread_Send_Sensors(self):
         try:
+            generator = self.sendData.json_double_data()
+            while self.connected:
+                data = genrator.next()
+                self.redis_handler.send(data)
+        except:
+            PrintException()
+
+    def connect(self):
+        self.connected = True
+        try:
+            # TODO:bad connect method
             self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
             self.sendData = self.SendData(self.printcore)
-            # TODO:yield json data here
+            self.pool.add_task(self.Thread_Send_Sensors())
         except:
             logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
         self.sendData.stopRunning()
+        self.connected = False
         self.pool.wait_completion()
 
     def reset(self):
