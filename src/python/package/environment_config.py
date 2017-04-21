@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 11:53:30
+# Last modified: 2017-04-21 15:37:45
 
 import json
 from package.debug import PrintException
@@ -26,14 +26,16 @@ class UseConfigs(object):
         self.config_file_path = path
 
     def check_config(self):
-        return os.path.isfile(self.config_file_path)
+        if not os.path.exists(self.config_file_path) or not os.path.isfile(self.config_file_path):
+            return False
+        return True
 
     def make_input(self):
         config = dict()
         config["redis_ip"] = raw_input("redis ip:")
-        config["redis_master"] = getpass.getpass("redis master:")
-        config["redis_slaver"] = raw_input("redis slaver:")
         config["redis_port"] = int(raw_input("redis port:"))
+        config["redis_master"] = raw_input("redis master:")
+        config["redis_slaver"] = raw_input("redis slaver:")
         return config
 
     def make_config(self):
@@ -62,6 +64,12 @@ class UseConfigs(object):
 
     def print_config(self):
         print(self.config)
+
+    def get_configs(self):
+        return self.config
+
+    def get_config_file_path(self):
+        return self.config_file_path
 
     def modify_config(self):
         try:
