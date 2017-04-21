@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-20 20:43:35
+# Last modified: 2017-04-21 11:53:30
 
 import json
 from package.debug import PrintException
@@ -31,7 +31,7 @@ class UseConfigs(object):
     def make_input(self):
         config = dict()
         config["redis_ip"] = raw_input("redis ip:")
-        config["redis_name"] = getpass.getpass("redis master:")
+        config["redis_master"] = getpass.getpass("redis master:")
         config["redis_slaver"] = raw_input("redis slaver:")
         config["redis_port"] = int(raw_input("redis port:"))
         return config
