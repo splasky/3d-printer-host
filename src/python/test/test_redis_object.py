@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 11:50:14
+# Last modified: 2017-04-21 14:27:23
 
 
 import pytest
@@ -15,12 +15,12 @@ master = "control"
 slave = "slave"
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def h1():
     return redis_handler(Port=port, Host=host, master=master, slaver=slave)
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def h2():
     return redis_handler(Port=port, Host=host, master=slave, slaver=master)
 
