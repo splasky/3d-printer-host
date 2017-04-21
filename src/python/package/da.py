@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-18 15:44:47
+# Last modified: 2017-04-21 17:30:01
 
 import sys
 import time
@@ -121,8 +121,12 @@ class PrintCore(object):
             setattr(self.printcoreHandler, 'logl', 0)
 
     def disconnect(self):
-        self.printcoreHandler.disconnect()
-        print("py:disconnect...")
+        try:
+            self.printcoreHandler.disconnect()
+            return True
+        except:
+            PrintException()
+            return False
 
     def is_printing(self):
         return self.printcoreHandler.printing
@@ -130,14 +134,17 @@ class PrintCore(object):
     def reset(self):
         self.printcoreHandler.reset()
         print('py:reset print')
+        return True
 
     def pause(self):
         self.printcoreHandler.pause()
         print('py:pause print')
+        return True
 
     def resume(self):
         self.printcoreHandler.resume()
         print('py:resume print')
+        return True
 
     def cancel(self):
         self.printcoreHandler.cancelprint()
@@ -145,20 +152,23 @@ class PrintCore(object):
         self.printcoreHandler.send_now("G28")  # home
         self.printcoreHandler.send_now("M84")  # stepperoff
         print("py:cancel print")
-        time.sleep(3)
+        return True
 
     def cooldown(self):
         self.printcoreHandler.send_now("M104 S0")
         print('py:cooldown')
+        return True
 
     def home(self):
         self.printcoreHandler.send_now("G28")
         print('py:home')
+        return True
 
     def send_now(self, command):
         try:
             self.printcoreHandler.send_now(command)
             print("send command success")
+            return True
         except:
             print("py:send command failed")
             return False
@@ -170,17 +180,16 @@ class PrintCore(object):
             gcode = gcoder.LightGCode(gcode)
             self.printcoreHandler.startprint(gcode)
             print("py:print")
+            return True
         except:
-            self.printcoreHandler.cancelprint()
-            self.printcoreHandler.send_now("M104 S0")  # cool dowm
-            self.printcoreHandler.send_now("G28")  # home
-            self.printcoreHandler.send_now("M84")  # stepperoff
+            self.cancel()
             PrintException()
             return False
 
     def stepperoff(self):
         self.printcoreHandler.send_now("M84")
         print('py:stepper off')
+        return True
 
     def printer_status(self):
         """get printer status into json file
@@ -250,84 +259,76 @@ class PrintCore(object):
             return ''
 
 
-def create_json_file(data):
+def create_json_file(path, data):
     """write a json file to path
+    :path: data to be store
     :data: data to be send
     :return: write success return file path else None
     """
     try:
         beSended = json.dumps(data)
-        fp = '/tmp/printer.json'
-        with open(os.path.abspath(fp), 'w') as file:
+        with open(os.path.join(path), 'w') as file:
             file.write(beSended)
-            return fp
     except Exception as e:
         print((e.args))
-        return None
 
 
-def DHT11_temp():
-    # have to use DHT11.Init_WiringPi() first
-    checksum = 0
-    while(checksum is 0):
-        humidity, humidityfloat, temperature, temperaturefloat, checksum = DHT11.read_DHT11()
+class sensors(object):
 
-    logging.debug("checksum :{0}".format(checksum))
-    if checksum == 0:
-        return None
-    else:
-        data = {"humidity": humidity, "humidityfloat": humidityfloat,
-                "temperature": temperature, "temperaturefloat": temperaturefloat}
-        return data
+    def DHT11_temp(self):
+        try:
+            # have to use DHT11.Init_WiringPi() first
+            checksum = 0
+            while(checksum is 0):
+                humidity, humidityfloat, temperature, temperaturefloat, checksum = DHT11.read_DHT11()
 
+            data = {"humidity": humidity, "humidityfloat": humidityfloat,
+                    "temperature": temperature, "temperaturefloat": temperaturefloat}
 
-def get_G_sensor():
+            return data
+        except:
+            PrintException()
+            return {}
 
-    try:
+    def get_G_sensor(self):
 
-        adxl345 = ADXL345()
-        axes = adxl345.getAxes(True)
+        try:
+            adxl345 = ADXL345()
+            axes = adxl345.getAxes(True)
 
-        g_x = (axes['x'])
-        g_y = (axes['y'])
-        g_z = (axes['z'])
+            g_x = (axes['x'])
+            g_y = (axes['y'])
+            g_z = (axes['z'])
 
-        return g_x, g_y, g_z
-    except:
-        PrintException()
-        return None
+            return g_x, g_y, g_z
+        except:
+            PrintException()
+            return {}
 
+    def IR_temp(self):
+        try:
+            # IR Temperature:
+            sensor = TMP006.TMP006()
+            sensor.begin()
+            obj_temp = sensor.readObjTempC()
+            die_temp = sensor.readDieTempC()
+            return obj_temp
+        except:
+            PrintException()
+            return {}
 
-def IR_temp():
-    try:
-        # IR Temperature:
-        sensor = TMP006.TMP006()
-        sensor.begin()
-        obj_temp = sensor.readObjTempC()
-        die_temp = sensor.readDieTempC()
-        return obj_temp
-    except:
-        PrintException()
-        return None
-
-
-def get_Sensors_data(data={}):
-    try:
-        dict = DHT11_temp()
-        if dict is not None:
-            data["humidity"] = dict["humidity"]
-            data["temp"] = dict["temperature"]
-        else:
-            return None
-        (data["g_x"], data["g_y"], data["g_z"]) = get_G_sensor()
-        logging.debug("Temperature: {0} C".format(data["temp"]))
-        logging.debug("Humidity:    {0}%%".format(data["humidity"]))
-        logging.debug("G sensors: {0},{1},{2}".format(
-            data["g_x"], data["g_y"], data["g_z"]))
-        return data
-    except:
-        PrintException()
-        return None
+    def get_Sensors_data(self):
+        try:
+            data = self.DHT11_temp()
+            (data["g_x"], data["g_y"], data["g_z"]) = self.get_G_sensor()
+            logging.debug("Temperature: {0} C".format(data["temp"]))
+            logging.debug("Humidity:    {0}%%".format(data["humidity"]))
+            logging.debug("G sensors: {0},{1},{2}".format(
+                data["g_x"], data["g_y"], data["g_z"]))
+            return data
+        except:
+            PrintException()
+            return {}
 
 
 class SqlManager(object):
