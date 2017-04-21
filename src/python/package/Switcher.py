@@ -1,21 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 14:57:35
+# Last modified: 2017-04-21 17:39:53
 
 import logging
 import os
 
 from time import sleep
-from package.send import upload_server
 from package.thread_pool import ThreadPool
-from package.s_printer_status import S_printer_status
 from package.debug import PrintException
 from package.da import PrintCore
 from package.da import CommandSwitchTableProto
 from package.est_time import es_time
 from package.timer import PercentTimer
-from package import da
+from package.dat import sensors
 
 
 class Print_time(object):
@@ -49,17 +47,19 @@ class Switcher(CommandSwitchTableProto):
             # get gcode file name
             self.fileName = ""
             # thread condition
-            self.lock = True
+            self.stopped = False
             # print time object,store print time
             self.print_time = Print_time()
             # percent timer object
             self.Timer = PercentTimer()
+            # sensors
+            self.sensors = sensors()
 
         def stopRunning(self):
-            self.lock = False
+            self.stopped = False
 
-        def isstopped(self):
-            return self.lock
+        def isStopped(self):
+            return self.stopped
 
         def set_file_name(self, filename):
             self.fileName = filename
@@ -77,16 +77,6 @@ class Switcher(CommandSwitchTableProto):
 
         def CleanTimer(self):
             self.Timer.cleanTimer()
-
-        def __st_Sensors(self):
-            sensors_data = da.get_Sensors_data()
-            if sensors_data is not None:
-                if self.printcore.is_printing():
-                    sensors_data["IR_temperature"] = 200.0
-                else:
-                    sensors_data["IR_temperature"] = self.printcore.headtemp()
-
-                da.Send_Sensors(data=sensors_data)
 
         # data for sending in SendJsonToRemote()
         def __createJsonData(self):
@@ -106,36 +96,26 @@ class Switcher(CommandSwitchTableProto):
                 return data
             except:
                 PrintException()
-                return None
+                return {}
 
-        def SendJsonToRemote(self):
-            data = self.__createJsonData()
-            if data is not None:
-                S_printer_status(data)
-
-        # thread put into threadpool
-        # insert for sensors data
-        def Thread_InsertSensors(self):
-            while self.isstopped():
-                # inset sensors data into database
-                try:
-                    self.__st_Sensors()
-                    logging.debug("Sensors insert success")
-                except:
-                    PrintException()
-                    logging.debug("Sensors send failed")
-                sleep(1)
-
-        # thread put into threadpool
-        def Thread_SendJsonData(self):
+        def json_double_data(self):
+            self.stopped = True
             while self.isstopped():
                 try:
-                    self.SendJsonToRemote()
-                    logging.debug("Send json data success")
+                    data = self.__createJsonData()
+                    sensors_data = self.sensors.get_Sensors_data()
+                    if self.printcore.is_printing():
+                        sensors_data["IR_temperature"] = 200.0
+                    else:
+                        sensors_data["IR_temperature"] = self.printcore.headtemp()
+
+                    all_data = {}
+                    all_data.update(data)
+                    all_data.update(sensors_data)
+
+                    return all_data
                 except:
                     PrintException()
-                    logging.debug("Send json data failed")
-                sleep(1)
 
     def __init__(self, redis, directory):
         super(Switcher, self).__init__()
@@ -157,7 +137,6 @@ class Switcher(CommandSwitchTableProto):
                 self.Default()
                 return False
 
-            da.Insert_logs(listcommand[0])
             if len(listcommand) > 1:
                 self.task.get(listcommand[0].strip())(listcommand[1].strip())
             else:
@@ -169,19 +148,17 @@ class Switcher(CommandSwitchTableProto):
 
     def connect(self):
         # TODO:bad connect method
-        self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
-        self.sendData = self.SendData(self.printcore)
-        if self.printcore is not None:
-            self.pool.add_task(self.sendData.Thread_SendJsonData)
-            self.pool.add_task(self.sendData.Thread_InsertSensors)
-        else:
+        try:
+            self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
+            self.sendData = self.SendData(self.printcore)
+            # TODO:yield json data here
+        except:
             logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
         self.sendData.stopRunning()
         self.pool.wait_completion()
-        self.sendData.SendJsonToRemote()
 
     def reset(self):
         self.printcore.reset()
@@ -207,7 +184,7 @@ class Switcher(CommandSwitchTableProto):
     def startprint(self, file_name):
 
         try:
-            gcode = self.redis_handler.get(file_name)
+            gcode = self.redis_handler.redis_handler.get(file_name)
             self.sendData.set_file_name(file_name)
             gcode_path = os.path.join(self.directory, file_name)
             self.sendData.CleanTimer()
