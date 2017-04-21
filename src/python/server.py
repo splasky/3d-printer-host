@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 14:19:49
+# Last modified: 2017-04-21 14:36:23
 
 from package.debug import PrintException
 from package.Switcher import Switcher
@@ -11,7 +11,7 @@ from package import DHT11
 
 class Server(object):
 
-    def __init__(self, Directory):
+    def __init__(self, Directory="/home/pi/Rpi3dPrinter"):
         self.directory = os.path.join(Directory)
         self.check_director(self.directory)
         self.config_file_path = os.path.join(self.directory, "config_file.json")
