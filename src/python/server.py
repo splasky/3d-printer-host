@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 16:21:04
+# Last modified: 2017-04-24 19:26:35
 
 import os
 import sys
 import logging
+import better_exceptions
+import threading
 from package.debug import PrintException
 from package.Switcher import Switcher
 from package.redis_object import redis_handler
@@ -16,6 +18,7 @@ class Server(object):
 
     def __init__(self, Directory="/home/pi/Rpi3dPrinter"):
         self.directory = os.path.join(Directory)
+        self.stopped = threading.Event()
         self.check_directory()
         self.config_file_path = os.path.join(self.directory, "config_file.json")
         DHT11.Init_WiringPi()
@@ -25,13 +28,15 @@ class Server(object):
                                            Port=self.config.config["redis_port"],
                                            master=self.config.config["redis_master"],
                                            slaver=self.config.config["redis_slaver"])
-        self.switcher = Switcher(self.redis_handler, self.directory)
+        self.switcher = Switcher(self.redis_handler, self.directory, stopped)
         self.isStopped = False
 
     def run_main(self):
+        logging.basicConfig(level=logging.DEBUG)
         self.isStopped = True
         listener = self.redis_handler.listen()
         try:
+            logging.debug("server listening...")
             while self.isStopped:
                 try:
                     # wait for message
@@ -65,7 +70,14 @@ class Server(object):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    # path to put gcode
-    directory = "/home/pi/Rpi3dPrinter"
-    server = Server(directory)
-    server.run_main()
+    try:
+        # path to put gcode
+        directory = "/home/pi/Rpi3dPrinter"
+        server = Server(directory)
+        server.run_main()
+    except KeyboardInterrupt:
+        PrintException()
+        sys.exit(0)
+    except:
+        PrintException()
+        sys.exit(0)

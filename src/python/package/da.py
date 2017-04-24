@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 17:30:01
+# Last modified: 2017-04-24 18:37:11
 
 import sys
 import time
@@ -114,11 +114,13 @@ class PrintCore(object):
     Baud = 250000
 
     def __init__(self, Port='/dev/ttyUSB0', Baud=250000):
-        self.printcoreHandler = printcore(port=Port, baud=Baud)
         try:
-            self.printcoreHandler.logl
-        except:
+            self.printcoreHandler = printcore(port=Port, baud=Baud)
+            # must wait for printcore connect success
+            time.sleep(3)
             setattr(self.printcoreHandler, 'logl', 0)
+        except:
+            PrintException()
 
     def disconnect(self):
         try:
@@ -279,8 +281,8 @@ class sensors(object):
         try:
             # have to use DHT11.Init_WiringPi() first
             checksum = 0
-            while(checksum is 0):
-                humidity, humidityfloat, temperature, temperaturefloat, checksum = DHT11.read_DHT11()
+            #  while checksum is not 0:
+            humidity, humidityfloat, temperature, temperaturefloat, checksum = DHT11.read_DHT11()
 
             data = {"humidity": humidity, "humidityfloat": humidityfloat,
                     "temperature": temperature, "temperaturefloat": temperaturefloat}
@@ -321,7 +323,7 @@ class sensors(object):
         try:
             data = self.DHT11_temp()
             (data["g_x"], data["g_y"], data["g_z"]) = self.get_G_sensor()
-            logging.debug("Temperature: {0} C".format(data["temp"]))
+            logging.debug("Temperature: {0} C".format(data["temperature"]))
             logging.debug("Humidity:    {0}%%".format(data["humidity"]))
             logging.debug("G sensors: {0},{1},{2}".format(
                 data["g_x"], data["g_y"], data["g_z"]))

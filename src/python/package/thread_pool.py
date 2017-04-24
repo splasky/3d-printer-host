@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-02-13 17:28:10
+# Last modified: 2017-04-24 18:08:25
 
-
+import better_exceptions
 from Queue import Queue
+from package.debug import PrintException
 from threading import Thread
 
 
@@ -23,7 +24,7 @@ class Worker(Thread):
             try:
                 func(*args, **kargs)
             except Exception as e:
-                print(e)
+                PrintException()
             finally:
                 self.tasks.task_done()
 

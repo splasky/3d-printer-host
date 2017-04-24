@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-24 08:00:44
+# Last modified: 2017-04-24 19:27:19
 
 import logging
 import os
+import better_exceptions
+import time
 
-from time import sleep
 from package.thread_pool import ThreadPool
 from package.debug import PrintException
 from package.da import PrintCore
@@ -95,10 +96,8 @@ class Switcher(CommandSwitchTableProto):
                     # add print time into data
                     data["PrintPercent"] = self.Timer.getPercent()
                     data["File_Name"] = self.fileName
-                logging.debug(data)
+                logging.debug("Create Json data success.")
                 return data
-            except StopIteration:
-                pass
             except:
                 PrintException()
                 return {}
@@ -113,16 +112,15 @@ class Switcher(CommandSwitchTableProto):
                         sensors_data["IR_temperature"] = 200.0
                     else:
                         sensors_data["IR_temperature"] = self.printcore.headtemp()
-
                     all_data = {}
                     all_data.update(data)
                     all_data.update(sensors_data)
-
-                    yield all_data
+                    logging.debug("json_double_data success.")
+                    return all_data
                 except:
                     PrintException()
 
-    def __init__(self, redis, directory):
+    def __init__(self, redis, directory, event):
         super(Switcher, self).__init__()
         # handlers
         # printcore handler
@@ -134,6 +132,7 @@ class Switcher(CommandSwitchTableProto):
         self.redis_handler = redis
         self.directory = directory
         self.genrator = None
+        self.stopped = event
 
     def __del__(self):
         del self.printcore
@@ -159,21 +158,21 @@ class Switcher(CommandSwitchTableProto):
 
     def Thread_Send_Sensors(self):
         try:
-            generator = self.sendData.json_double_data()
             while self.printcore.printcoreHandler.online:
-                data = generator.next()
+                data = self.sendData.json_double_data()
                 self.redis_handler.send(data)
+                time.sleep(0.001)
         except:
             PrintException()
 
     def connect(self):
-        try:
-            # TODO:bad connect method
-            self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
-            self.sendData = self.SendData(self.printcore)
-            self.pool.add_task(self.Thread_Send_Sensors())
-        except:
-            logging.error("Connect printer error!")
+        # TODO:bad connect method
+        self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
+        assert isinstance(self.printcore, PrintCore)
+        self.sendData = self.SendData(self.printcore)
+        assert isinstance(self.sendData, self.SendData)
+        self.pool.add_task(self.Thread_Send_Sensors())
+        logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
