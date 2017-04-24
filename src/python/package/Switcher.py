@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-21 18:16:58
+# Last modified: 2017-04-24 08:00:44
 
 import logging
 import os
@@ -13,7 +13,7 @@ from package.da import PrintCore
 from package.da import CommandSwitchTableProto
 from package.est_time import es_time
 from package.timer import PercentTimer
-from package.dat import sensors
+from package.da import sensors
 
 
 class Print_time(object):
@@ -55,6 +55,9 @@ class Switcher(CommandSwitchTableProto):
             # sensors
             self.sensors = sensors()
 
+        def __del__(self):
+            self.stopRunning()
+
         def stopRunning(self):
             self.stopped = False
 
@@ -94,13 +97,15 @@ class Switcher(CommandSwitchTableProto):
                     data["File_Name"] = self.fileName
                 logging.debug(data)
                 return data
+            except StopIteration:
+                pass
             except:
                 PrintException()
                 return {}
 
         def json_double_data(self):
             self.stopped = True
-            while self.isstopped():
+            while self.isStopped():
                 try:
                     data = self.__createJsonData()
                     sensors_data = self.sensors.get_Sensors_data()
@@ -129,7 +134,11 @@ class Switcher(CommandSwitchTableProto):
         self.redis_handler = redis
         self.directory = directory
         self.genrator = None
-        self.connected = False
+
+    def __del__(self):
+        del self.printcore
+        del self.sendData
+        del self.pool
 
     def getTask(self, command):
         try:
@@ -151,14 +160,13 @@ class Switcher(CommandSwitchTableProto):
     def Thread_Send_Sensors(self):
         try:
             generator = self.sendData.json_double_data()
-            while self.connected:
-                data = genrator.next()
+            while self.printcore.printcoreHandler.online:
+                data = generator.next()
                 self.redis_handler.send(data)
         except:
             PrintException()
 
     def connect(self):
-        self.connected = True
         try:
             # TODO:bad connect method
             self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
@@ -170,7 +178,6 @@ class Switcher(CommandSwitchTableProto):
     def disconnect(self):
         self.printcore.disconnect()
         self.sendData.stopRunning()
-        self.connected = False
         self.pool.wait_completion()
 
     def reset(self):
