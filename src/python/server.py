@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-24 19:26:35
+# Last modified: 2017-04-25 08:27:31
 
 import os
 import sys
 import logging
 import better_exceptions
 import threading
+from package.thread_pool import ThreadPool
 from package.debug import PrintException
 from package.Switcher import Switcher
 from package.redis_object import redis_handler
@@ -18,6 +19,7 @@ class Server(object):
 
     def __init__(self, Directory="/home/pi/Rpi3dPrinter"):
         self.directory = os.path.join(Directory)
+        self.pool = ThreadPool(6)
         self.stopped = threading.Event()
         self.check_directory()
         self.config_file_path = os.path.join(self.directory, "config_file.json")
@@ -28,31 +30,34 @@ class Server(object):
                                            Port=self.config.config["redis_port"],
                                            master=self.config.config["redis_master"],
                                            slaver=self.config.config["redis_slaver"])
-        self.switcher = Switcher(self.redis_handler, self.directory, stopped)
+        self.switcher = Switcher(self.redis_handler, self.directory, self.stopped, self.pool)
         self.isStopped = False
 
     def run_main(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.isStopped = True
-        listener = self.redis_handler.listen()
         try:
+            listener = self.redis_handler.listen()
             logging.debug("server listening...")
-            while self.isStopped:
+            while not self.stopped.is_set():
                 try:
                     # wait for message
                     src = listener.next().get('data').decode('utf-8')
                     print(("Client send:" + src))
-                    check = self.switcher.getTask(src)
-                    self.redis_handler.send(check)
+                    self.pool.add_task(self.switcher.getTask(src))
+                    #  self.redis_handler.send(check)
                 except StopIteration:
                     pass
                 except:
                     PrintException()
         except KeyboardInterrupt:
             print("KeyboardInterrupt! Stop server")
+            self.stopped.set()
             sys.exit(0)
         except:
             PrintException()
+
+    def __del__(self):
+        self.pool.wait_completion()
 
     def check_directory(self):
         # check directory is exists
