@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-24 18:37:11
+# Last modified: 2017-04-25 19:40:08
 
 import sys
 import time
@@ -32,7 +32,7 @@ class CommandSwitchTableProto(object):
 
     metaclass__ = ABCMeta
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.task = {
             "connect": self.connect,
             "disconnect": self.disconnect,
