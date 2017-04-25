@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 08:47:21
+# Last modified: 2017-04-25 20:20:12
 
 import logging
 import os
@@ -36,123 +36,110 @@ class Print_time(object):
         return self.hour * 60 + self.miniute
 
 
-class Switcher(CommandSwitchTableProto):
+class SendData(object):
+    '''
+    class for control send json data and environment data.
+    '''
 
-    class SendData(object):
-        '''
-        class for control send json data and environment data.
-        '''
+    def __init__(self, printcore):
+        # printcore object to get printcore information
+        self.printcore = printcore
+        # get gcode file name
+        self.fileName = ""
+        # print time object,store print time
+        self.print_time = Print_time()
+        # percent timer object
+        self.Timer = PercentTimer()
+        # sensors
+        self.sensors = sensors()
 
-        def __init__(self, printercore):
-            # printcore object to get printcore information
-            self.printcore = printercore
-            # get gcode file name
-            self.fileName = ""
-            # thread condition
-            self.stopped = False
-            # print time object,store print time
-            self.print_time = Print_time()
-            # percent timer object
-            self.Timer = PercentTimer()
-            # sensors
-            self.sensors = sensors()
+    def __del__(self):
+        self.stopRunning()
 
-        def __del__(self):
-            self.stopRunning()
+    def set_file_name(self, filename):
+        self.fileName = filename
 
-        def stopRunning(self):
-            self.stopped = False
+    def Set_Print_Time(self, hour=0, miniute=0):
+        self.print_time.hour = hour
+        self.print_time.miniute = miniute
+        self.Timer.set_total_time((hour * 60 + miniute) * 60)
 
-        def isStopped(self):
-            return self.stopped
+    def StopTimer(self):
+        self.Timer.stop()
 
-        def set_file_name(self, filename):
-            self.fileName = filename
+    def StartTimer(self):
+        self.Timer.start()
 
-        def Set_Print_Time(self, hour=0, miniute=0):
-            self.print_time.hour = hour
-            self.print_time.miniute = miniute
-            self.Timer.set_total_time((hour * 60 + miniute) * 60)
+    def CleanTimer(self):
+        self.Timer.cleanTimer()
 
-        def StopTimer(self):
-            self.Timer.stop()
+    # data for sending in SendJsonToRemote()
+    def createJsonData(self):
+        try:
 
-        def StartTimer(self):
-            self.Timer.start()
+            # get printer status data
+            data = self.printcore.printer_status()
 
-        def CleanTimer(self):
-            self.Timer.cleanTimer()
+            # get filename if startprint is start
+            data["PrintPercent"] = 0
+            data["File_Name"] = ""
+            if self.fileName is not "":
+                # add print time into data
+                data["PrintPercent"] = self.Timer.getPercent()
+                data["File_Name"] = self.fileName
+            logging.debug("Create Json data success.")
+            return data
+        except:
+            PrintException()
+            return {}
 
-        # data for sending in SendJsonToRemote()
-        def __createJsonData(self):
+    def json_double_data(self):
+        while True:
             try:
-
-                # get printer status data
-                data = self.printcore.printer_status()
-
-                # get filename if startprint is start
-                data["PrintPercent"] = 0
-                data["File_Name"] = ""
-                if self.fileName is not "":
-                    # add print time into data
-                    data["PrintPercent"] = self.Timer.getPercent()
-                    data["File_Name"] = self.fileName
-                logging.debug("Create Json data success.")
-                return data
+                data = self.createJsonData()
+                sensors_data = self.sensors.get_Sensors_data()
+                if self.printcore.is_printing():
+                    sensors_data["IR_temperature"] = 200.0
+                else:
+                    sensors_data["IR_temperature"] = self.printcore.headtemp()
+                all_data = {}
+                all_data.update(data)
+                all_data.update(sensors_data)
+                logging.debug("json_double_data success.")
+                yield all_data
             except:
                 PrintException()
-                return {}
+                return
 
-        def json_double_data(self):
-            self.stopped = True
-            while self.isStopped():
-                try:
-                    data = self.__createJsonData()
-                    sensors_data = self.sensors.get_Sensors_data()
-                    if self.printcore.is_printing():
-                        sensors_data["IR_temperature"] = 200.0
-                    else:
-                        sensors_data["IR_temperature"] = self.printcore.headtemp()
-                    all_data = {}
-                    all_data.update(data)
-                    all_data.update(sensors_data)
-                    logging.debug("json_double_data success.")
-                    return all_data
-                except:
-                    PrintException()
 
-    def __init__(self, redis, directory, event, pool):
-        super(Switcher, self).__init__()
-        # handlers
-        # printcore handler
+class Switcher(CommandSwitchTableProto, SendData):
+
+    def __init__(self, redis, directory, pool):
         self.printcore = None
-        # handler for send json file and insert environment data
-        self.sendData = None
-        # thread pool handler
+        CommandSwitchTableProto.__init__(self)
+        SendData.__init__(self, printcore=self.printcore)
+
+        # handlers
         self.pool = pool
         self.redis_handler = redis
         self.directory = directory
-        self.genrator = None
-        self.stopped = event
+        self.generator = self.json_double_data()
         self.Lock = threading.Lock()
 
     def __del__(self):
         del self.printcore
-        del self.sendData
-        del self.pool
 
     def getTask(self, command):
         try:
             listcommand = command.split(" ", 1)
             print(("command list:", listcommand))
             command = listcommand[0].strip()
-            arg = listcommand[1].strip()
             if command not in self.task:
                 self.Default()
                 return False
 
             if len(listcommand) > 1:
-                self.task.get(command)(arg)
+                self.task.get(command)(listcommand[1].strip())
             else:
                 self.task.get(command)()
             return True
@@ -163,7 +150,7 @@ class Switcher(CommandSwitchTableProto):
     def Thread_Send_Sensors(self):
         try:
             with self.Lock:
-                data = self.sendData.json_double_data()
+                data = self.generator.next()
                 self.redis_handler.send(data)
                 time.sleep(0.001)
             self.pool.add_task(self.Thread_Send_Sensors())
@@ -174,13 +161,10 @@ class Switcher(CommandSwitchTableProto):
         # TODO:bad connect method
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         assert isinstance(self.printcore, PrintCore)
-        self.sendData = self.SendData(self.printcore)
-        assert isinstance(self.sendData, self.SendData)
         self.pool.add_task(self.Thread_Send_Sensors())
 
     def disconnect(self):
         self.printcore.disconnect()
-        self.sendData.stopRunning()
         self.pool.wait_completion()
 
     def reset(self):
@@ -188,15 +172,15 @@ class Switcher(CommandSwitchTableProto):
 
     def pause(self):
         self.printcore.pause()
-        self.sendData.StopTimer()
+        self.StopTimer()
 
     def resume(self):
         self.printcore.resume()
-        self.sendData.StartTimer()
+        self.StartTimer()
 
     def cancel(self):
         self.printcore.cancel()
-        self.sendData.CleanTimer()
+        self.CleanTimer()
 
     def home(self):
         self.printcore.home()
@@ -208,9 +192,9 @@ class Switcher(CommandSwitchTableProto):
 
         try:
             gcode = self.redis_handler.redis_handler.get(file_name)
-            self.sendData.set_file_name(file_name)
+            self.set_file_name(file_name)
             gcode_path = os.path.join(self.directory, file_name)
-            self.sendData.CleanTimer()
+            self.CleanTimer()
             # create file
             with open(gcode_path, 'w') as f:
                 f.write(gcode)
@@ -218,8 +202,8 @@ class Switcher(CommandSwitchTableProto):
             # set print time!
             est_time = es_time(gcode_path)
             (hours, miniutes) = est_time.estime()
-            self.sendData.Set_Print_Time(hours, miniutes)
-            self.sendData.StartTimer()
+            self.Set_Print_Time(hours, miniutes)
+            self.StartTimer()
 
             self.pool.add_task(
                 self.printcore.startprint(gcode_path)
