@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-24 19:27:19
+# Last modified: 2017-04-25 08:47:21
 
 import logging
 import os
 import better_exceptions
 import time
+import threading
 
 from package.thread_pool import ThreadPool
 from package.debug import PrintException
@@ -120,7 +121,7 @@ class Switcher(CommandSwitchTableProto):
                 except:
                     PrintException()
 
-    def __init__(self, redis, directory, event):
+    def __init__(self, redis, directory, event, pool):
         super(Switcher, self).__init__()
         # handlers
         # printcore handler
@@ -128,11 +129,12 @@ class Switcher(CommandSwitchTableProto):
         # handler for send json file and insert environment data
         self.sendData = None
         # thread pool handler
-        self.pool = ThreadPool(6)
+        self.pool = pool
         self.redis_handler = redis
         self.directory = directory
         self.genrator = None
         self.stopped = event
+        self.Lock = threading.Lock()
 
     def __del__(self):
         del self.printcore
@@ -143,14 +145,16 @@ class Switcher(CommandSwitchTableProto):
         try:
             listcommand = command.split(" ", 1)
             print(("command list:", listcommand))
-            if listcommand[0].strip() not in self.task:
+            command = listcommand[0].strip()
+            arg = listcommand[1].strip()
+            if command not in self.task:
                 self.Default()
                 return False
 
             if len(listcommand) > 1:
-                self.task.get(listcommand[0].strip())(listcommand[1].strip())
+                self.task.get(command)(arg)
             else:
-                self.task.get(listcommand[0].strip())()
+                self.task.get(command)()
             return True
         except:
             PrintException()
@@ -158,10 +162,11 @@ class Switcher(CommandSwitchTableProto):
 
     def Thread_Send_Sensors(self):
         try:
-            while self.printcore.printcoreHandler.online:
+            with self.Lock:
                 data = self.sendData.json_double_data()
                 self.redis_handler.send(data)
                 time.sleep(0.001)
+            self.pool.add_task(self.Thread_Send_Sensors())
         except:
             PrintException()
 
@@ -172,7 +177,6 @@ class Switcher(CommandSwitchTableProto):
         self.sendData = self.SendData(self.printcore)
         assert isinstance(self.sendData, self.SendData)
         self.pool.add_task(self.Thread_Send_Sensors())
-        logging.error("Connect printer error!")
 
     def disconnect(self):
         self.printcore.disconnect()
