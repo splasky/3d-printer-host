@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 08:27:31
+# Last modified: 2017-04-25 20:22:12
 
 import os
 import sys
@@ -30,23 +30,20 @@ class Server(object):
                                            Port=self.config.config["redis_port"],
                                            master=self.config.config["redis_master"],
                                            slaver=self.config.config["redis_slaver"])
-        self.switcher = Switcher(self.redis_handler, self.directory, self.stopped, self.pool)
+        self.switcher = Switcher(self.redis_handler, self.directory, self.pool)
         self.isStopped = False
 
-    def run_main(self):
+    def Thread_main(self):
         logging.basicConfig(level=logging.DEBUG)
         try:
-            listener = self.redis_handler.listen()
             logging.debug("server listening...")
-            while not self.stopped.is_set():
+            # wait for message
+            for message in self.redis_handler.pubsub.listen():
                 try:
-                    # wait for message
-                    src = listener.next().get('data').decode('utf-8')
+                    src = message.get('data').decode('utf-8')
                     print(("Client send:" + src))
-                    self.pool.add_task(self.switcher.getTask(src))
-                    #  self.redis_handler.send(check)
-                except StopIteration:
-                    pass
+                    check = self.switcher.getTask(src)
+                    self.redis_handler.send(check)
                 except:
                     PrintException()
         except KeyboardInterrupt:
@@ -56,7 +53,11 @@ class Server(object):
         except:
             PrintException()
 
+    def run_main(self):
+        self.pool.add_task(self.Thread_main())
+
     def __del__(self):
+        self.close_main()
         self.pool.wait_completion()
 
     def check_directory(self):
@@ -69,7 +70,7 @@ class Server(object):
             self.config.make_config()
         self.config.load_config()
 
-    def close_main():
+    def close_main(self):
         self.isStopped = False
 
 
