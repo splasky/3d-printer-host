@@ -1,1 +1,5 @@
 sensors data gone when cancel printing.
+program quit when cancel printing
+None type error when sending out sensors data
+DHT11 sensors gone
+
