@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 15:51:16
+# Last modified: 2017-04-27 19:20:54
 
 import sys
 import time
@@ -217,23 +217,18 @@ class PrintCore(object):
             setattr(self, 'logl', 0)
             setattr(self, 'temp', 0)
 
-        htemp = None
-
-        while htemp is None:
-            if(self.printcoreHandler.online is False):
-                break
-            for n in range(self.printcoreHandler.logl, len(self.printcoreHandler.log)):
-                line = self.printcoreHandler.log[n]
-                if 'T:' in line:
-                    te = line.split('T:')[1]
-                    htemp = float(te.split("/")[0].strip())
-                    setattr(self, 'temp', htemp)
-                    self.printcoreHandler.logl = len(self.printcoreHandler.log)
-                    break
-            self.printcoreHandler.send_now("M105")
-            time.sleep(1)
-
-        return htemp
+        if(self.printcoreHandler.online is False):
+            return None
+        for n in range(self.printcoreHandler.logl, len(self.printcoreHandler.log)):
+            line = self.printcoreHandler.log[n]
+            if 'T:' in line:
+                te = line.split('T:')[1]
+                htemp = float(te.split("/")[0].strip())
+                setattr(self, 'temp', htemp)
+                self.printcoreHandler.logl = len(self.printcoreHandler.log)
+                self.printcoreHandler.send_now("M105")
+                return htemp
+        return None
 
     def headtemp(self):
         try:
