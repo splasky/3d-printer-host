@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 15:47:37
+# Last modified: 2017-04-27 19:26:17
 
 import logging
 import os
@@ -57,6 +57,11 @@ class SendData(object):
     def __del__(self):
         self.stopRunning()
 
+    def clean_ALL_Data(self):
+        self.fileName = ""
+        self.print_time = Print_time()
+        self.Timer = PercentTimer()
+
     def set_file_name(self, filename):
         self.fileName = filename
 
@@ -99,10 +104,7 @@ class SendData(object):
             try:
                 data = self.createJsonData()
                 sensors_data = self.sensors.get_Sensors_data()
-                if self.printcore.is_printing():
-                    sensors_data["IR_temperature"] = 200.0
-                else:
-                    sensors_data["IR_temperature"] = self.printcore.headtemp()
+                sensors_data["IR_temperature"] = self.printcore.headtemp()
                 all_data = {}
                 all_data.update(data)
                 all_data.update(sensors_data)
@@ -174,8 +176,8 @@ class Switcher(CommandSwitchTableProto, SendData):
 
     def disconnect(self):
         self.printcore.disconnect()
-        self.pool.wait_completion()
         self.connected = False
+        self.pool.wait_completion()
 
     def reset(self):
         self.printcore.reset()
@@ -192,12 +194,24 @@ class Switcher(CommandSwitchTableProto, SendData):
         self.printcore.cancel()
         self.pool.wait_completion()
         self.CleanTimer()
+        self.clean_ALL_Data()
 
     def home(self):
         self.printcore.home()
 
     def send_now(self, command):
         self.printcore.send_now(command.strip("\n"))
+
+    #  def monitor_printing(self):
+        #  is_printing = self.printcore.is_printing()
+        #  while True:
+        #      if not is_printing:
+        #          self.clean_ALL_Data()
+        #          self.pool.wait_completion()
+        #          return
+        #      if not self.connected:
+        #          return
+    #          pass
 
     def startprint(self, file_name):
 
@@ -222,6 +236,7 @@ class Switcher(CommandSwitchTableProto, SendData):
 
         except:
             PrintException()
+            self.clean_ALL_Data()
 
     def Default(self):
         logging.debug("no command")
