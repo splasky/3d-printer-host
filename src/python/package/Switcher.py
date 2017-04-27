@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 11:38:27
+# Last modified: 2017-04-27 14:44:41
 
 import logging
 import os
@@ -153,6 +153,7 @@ class Switcher(CommandSwitchTableProto, SendData):
         try:
             with self.Lock:
                 data = self.generator.next()
+                print("all datas:", data)
                 self.redis_handler.send(data)
                 time.sleep(0.001)
         except:
@@ -163,10 +164,11 @@ class Switcher(CommandSwitchTableProto, SendData):
 
     def connect(self):
         # TODO:bad connect method
-        self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
-        assert isinstance(self.printcore, PrintCore)
-        self.pool.add_task(self.Send_Sensors())
-        self.connected = True
+        if self.connected is not True:
+            self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
+            assert isinstance(self.printcore, PrintCore)
+            self.pool.add_task(self.Send_Sensors())
+            self.connected = True
 
     def disconnect(self):
         self.printcore.disconnect()
