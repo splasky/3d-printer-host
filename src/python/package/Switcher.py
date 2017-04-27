@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 20:20:12
+# Last modified: 2017-04-27 11:38:27
 
 import logging
 import os
@@ -125,8 +125,10 @@ class Switcher(CommandSwitchTableProto, SendData):
         self.directory = directory
         self.generator = self.json_double_data()
         self.Lock = threading.Lock()
+        self.connected = False
 
     def __del__(self):
+        self.disconnect()
         del self.printcore
 
     def getTask(self, command):
@@ -147,25 +149,29 @@ class Switcher(CommandSwitchTableProto, SendData):
             PrintException()
             return False
 
-    def Thread_Send_Sensors(self):
+    def Send_Sensors(self):
         try:
             with self.Lock:
                 data = self.generator.next()
                 self.redis_handler.send(data)
                 time.sleep(0.001)
-            self.pool.add_task(self.Thread_Send_Sensors())
         except:
             PrintException()
+
+    def Thread_add_Send_Sensors(self):
+        self.pool.add_task(self.Send_Sensors())
 
     def connect(self):
         # TODO:bad connect method
         self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
         assert isinstance(self.printcore, PrintCore)
-        self.pool.add_task(self.Thread_Send_Sensors())
+        self.pool.add_task(self.Send_Sensors())
+        self.connected = True
 
     def disconnect(self):
         self.printcore.disconnect()
         self.pool.wait_completion()
+        self.connected = False
 
     def reset(self):
         self.printcore.reset()

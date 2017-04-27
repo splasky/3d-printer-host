@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 20:22:12
+# Last modified: 2017-04-27 11:26:50
 
 import os
 import sys
@@ -38,14 +38,20 @@ class Server(object):
         try:
             logging.debug("server listening...")
             # wait for message
-            for message in self.redis_handler.pubsub.listen():
-                try:
-                    src = message.get('data').decode('utf-8')
-                    print(("Client send:" + src))
-                    check = self.switcher.getTask(src)
-                    self.redis_handler.send(check)
-                except:
-                    PrintException()
+            while True:
+                #  for message in self.redis_handler.pubsub.listen():
+                message = self.redis_handler.pubsub.get_message()
+                if message:
+                    try:
+                        src = message.get('data').decode('utf-8')
+                        print(("Client send:" + src))
+                        check = self.switcher.getTask(src)
+                        self.redis_handler.send(check)
+                    except:
+                        PrintException()
+                else:
+                    if(self.switcher.connected):
+                        self.switcher.Thread_add_Send_Sensors()
         except KeyboardInterrupt:
             print("KeyboardInterrupt! Stop server")
             self.stopped.set()
