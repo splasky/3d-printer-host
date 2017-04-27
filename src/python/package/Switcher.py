@@ -188,6 +188,7 @@ class Switcher(CommandSwitchTableProto, SendData):
 
     def cancel(self):
         self.printcore.cancel()
+        self.pool.wait_completion()
         self.CleanTimer()
 
     def home(self):
