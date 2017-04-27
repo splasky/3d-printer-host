@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 14:57:11
+# Last modified: 2017-04-27 15:45:46
 
 import os
 import sys
@@ -45,7 +45,7 @@ class Server(object):
                         src = message.get('data').decode('utf-8')
                         print(("Client send:" + src))
                         check = self.switcher.getTask(src)
-                        self.redis_handler.send(check)
+                        #  self.redis_handler.send(check)
                     except:
                         PrintException()
                 else:

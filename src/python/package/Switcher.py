@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 14:44:41
+# Last modified: 2017-04-27 15:47:37
 
 import logging
 import os
 import better_exceptions
 import time
 import threading
+import json
 
 from package.thread_pool import ThreadPool
 from package.debug import PrintException
@@ -106,6 +107,7 @@ class SendData(object):
                 all_data.update(data)
                 all_data.update(sensors_data)
                 logging.debug("json_double_data success.")
+                all_data = json.dumps(all_data, separators=(',', ':')).encode('utf-8')
                 yield all_data
             except:
                 PrintException()

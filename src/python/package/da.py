@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 14:54:49
+# Last modified: 2017-04-27 15:51:16
 
 import sys
 import time
@@ -232,7 +232,6 @@ class PrintCore(object):
                     break
             self.printcoreHandler.send_now("M105")
             time.sleep(1)
-            #  logging.debug("deque:{0}".format(str(self.printcoreHandler.log)))
 
         return htemp
 
