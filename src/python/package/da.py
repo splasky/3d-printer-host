@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 19:40:08
+# Last modified: 2017-04-27 14:54:49
 
 import sys
 import time
@@ -15,7 +15,6 @@ import logging
 
 from abc import ABCMeta, abstractmethod
 from package.debug import PrintException
-from datetime import datetime
 
 # Third party
 import MySQLdb
@@ -251,13 +250,10 @@ class PrintCore(object):
             time.sleep(1)
             for n in range(self.printcoreHandler.logl, len(self.printcoreHandler.log)):
                 line = self.printcoreHandler.log[n]
-                if("X:"in line):  # may be mistake
-                    logging.debug("Position:{0}".format(line))
-                    self.printcoreHandler.logl = len(self.printcoreHandler.log)
+                if("X:"in line):
                     return line.strip()
         except:
-            PrintException()
-            logging.debug("in GetPosition {0}".format(line))
+            logging.debug("Printcore:get position error.")
             return ''
 
 
@@ -276,6 +272,9 @@ def create_json_file(path, data):
 
 
 class sensors(object):
+
+    def get_current_time(self):
+        return str(datetime.datetime.now())
 
     def DHT11_temp(self):
         try:
@@ -323,10 +322,8 @@ class sensors(object):
         try:
             data = self.DHT11_temp()
             (data["g_x"], data["g_y"], data["g_z"]) = self.get_G_sensor()
-            logging.debug("Temperature: {0} C".format(data["temperature"]))
-            logging.debug("Humidity:    {0}%%".format(data["humidity"]))
-            logging.debug("G sensors: {0},{1},{2}".format(
-                data["g_x"], data["g_y"], data["g_z"]))
+            data["time"] = self.get_current_time()
+
             return data
         except:
             PrintException()
