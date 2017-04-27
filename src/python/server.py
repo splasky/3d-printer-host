@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 11:26:50
+# Last modified: 2017-04-27 14:57:11
 
 import os
 import sys
 import logging
-import better_exceptions
 import threading
 from package.thread_pool import ThreadPool
 from package.debug import PrintException
@@ -36,7 +35,7 @@ class Server(object):
     def Thread_main(self):
         logging.basicConfig(level=logging.DEBUG)
         try:
-            logging.debug("server listening...")
+            print("server listening...")
             # wait for message
             while True:
                 #  for message in self.redis_handler.pubsub.listen():
