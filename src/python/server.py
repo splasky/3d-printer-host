@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 15:45:46
+# Last modified: 2017-05-05 09:38:42
 
 import os
 import sys
@@ -49,8 +49,8 @@ class Server(object):
                     except:
                         PrintException()
                 else:
-                    if(self.switcher.connected):
-                        self.switcher.Thread_add_Send_Sensors()
+                    self.switcher.Thread_add_Send_Sensors()
+                    self.pool.add_task(self.switcher.status_checker)
         except KeyboardInterrupt:
             print("KeyboardInterrupt! Stop server")
             self.stopped.set()

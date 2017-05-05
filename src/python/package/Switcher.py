@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 19:26:17
+# Last modified: 2017-05-05 09:38:10
 
 import logging
 import os
@@ -45,10 +45,7 @@ class SendData(object):
     def __init__(self, printcore):
         # printcore object to get printcore information
         self.printcore = printcore
-        # get gcode file name
         self.fileName = ""
-        # print time object,store print time
-        self.print_time = Print_time()
         # percent timer object
         self.Timer = PercentTimer()
         # sensors
@@ -59,21 +56,23 @@ class SendData(object):
 
     def clean_ALL_Data(self):
         self.fileName = ""
-        self.print_time = Print_time()
-        self.Timer = PercentTimer()
+        self.CleanTimer()
 
     def set_file_name(self, filename):
         self.fileName = filename
 
     def Set_Print_Time(self, hour=0, miniute=0):
-        self.print_time.hour = hour
-        self.print_time.miniute = miniute
         self.Timer.set_total_time((hour * 60 + miniute) * 60)
 
     def StopTimer(self):
         self.Timer.stop()
 
-    def StartTimer(self):
+    def StartTimer(self, gcode_path):
+        # set print time!
+        est_time = es_time(gcode_path)
+        (hours, miniutes) = est_time.estime()
+        assert hours not 0 and miniutes not 0
+        self.Set_Print_Time(hours, miniutes)
         self.Timer.start()
 
     def CleanTimer(self):
@@ -89,7 +88,7 @@ class SendData(object):
             # get filename if startprint is start
             data["PrintPercent"] = 0
             data["File_Name"] = ""
-            if self.fileName is not "":
+            if self.printcore.is_printing():
                 # add print time into data
                 data["PrintPercent"] = self.Timer.getPercent()
                 data["File_Name"] = self.fileName
@@ -119,7 +118,7 @@ class SendData(object):
 class Switcher(CommandSwitchTableProto, SendData):
 
     def __init__(self, redis, directory, pool):
-        self.printcore = None
+        self.printcore = PrintCore()
         CommandSwitchTableProto.__init__(self)
         SendData.__init__(self, printcore=self.printcore)
 
@@ -130,6 +129,7 @@ class Switcher(CommandSwitchTableProto, SendData):
         self.generator = self.json_double_data()
         self.Lock = threading.Lock()
         self.connected = False
+        self.printed = False
 
     def __del__(self):
         self.disconnect()
@@ -166,10 +166,10 @@ class Switcher(CommandSwitchTableProto, SendData):
     def Thread_add_Send_Sensors(self):
         self.pool.add_task(self.Send_Sensors())
 
-    def connect(self):
+    def connect(self, port='/dev/ttyUSB0', baud=250000):
         # TODO:bad connect method
         if self.connected is not True:
-            self.printcore = PrintCore(Port='/dev/ttyUSB0', Baud=250000)
+            self.printcore = PrintCore.connect(Port=port, Baud=baud)
             assert isinstance(self.printcore, PrintCore)
             self.pool.add_task(self.Send_Sensors())
             self.connected = True
@@ -181,6 +181,7 @@ class Switcher(CommandSwitchTableProto, SendData):
 
     def reset(self):
         self.printcore.reset()
+        self.clean_ALL_Data()
 
     def pause(self):
         self.printcore.pause()
@@ -193,7 +194,6 @@ class Switcher(CommandSwitchTableProto, SendData):
     def cancel(self):
         self.printcore.cancel()
         self.pool.wait_completion()
-        self.CleanTimer()
         self.clean_ALL_Data()
 
     def home(self):
@@ -202,16 +202,13 @@ class Switcher(CommandSwitchTableProto, SendData):
     def send_now(self, command):
         self.printcore.send_now(command.strip("\n"))
 
-    #  def monitor_printing(self):
-        #  is_printing = self.printcore.is_printing()
-        #  while True:
-        #      if not is_printing:
-        #          self.clean_ALL_Data()
-        #          self.pool.wait_completion()
-        #          return
-        #      if not self.connected:
-        #          return
-    #          pass
+    def status_checker(self):
+        if printed and not self.printcore.printcoreHandler.pause() and
+        not self.printcore.is_printing:
+            # clean data when finish printing
+            self.clean_ALL_Data()
+            self.pool.wait_completion()
+            self.printed = False
 
     def startprint(self, file_name):
 
@@ -224,15 +221,11 @@ class Switcher(CommandSwitchTableProto, SendData):
             with open(gcode_path, 'w') as f:
                 f.write(gcode)
 
-            # set print time!
-            est_time = es_time(gcode_path)
-            (hours, miniutes) = est_time.estime()
-            self.Set_Print_Time(hours, miniutes)
-            self.StartTimer()
-
+            self.pool.add_task(self.StartTimer(gcode_path))
             self.pool.add_task(
                 self.printcore.startprint(gcode_path)
             )
+            self.printed = True
 
         except:
             PrintException()
