@@ -201,8 +201,7 @@ class Switcher(CommandSwitchTableProto, SendData):
         self.printcore.send_now(command.strip("\n"))
 
     def status_checker(self):
-        if printed and not self.printcore.printcoreHandler.pause and
-        not self.printcore.is_printing:
+        if self.printed and not self.printcore.isPaused() and not self.printcore.is_printing:
             # clean data when finish printing
             self.clean_ALL_Data()
             self.pool.wait_completion()
@@ -219,7 +218,7 @@ class Switcher(CommandSwitchTableProto, SendData):
             with open(gcode_path, 'w') as f:
                 f.write(gcode)
 
-            self.pool.add_task(self.StartTimer(gcode_path))
+            self.StartTimer(gcode_path)
             self.pool.add_task(
                 self.printcore.startprint(gcode_path)
             )
