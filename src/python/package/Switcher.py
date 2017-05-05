@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 09:38:10
+# Last modified: 2017-05-05 15:01:19
 
 import logging
 import os
@@ -203,7 +203,7 @@ class Switcher(CommandSwitchTableProto, SendData):
         self.printcore.send_now(command.strip("\n"))
 
     def status_checker(self):
-        if printed and not self.printcore.printcoreHandler.pause() and
+        if printed and not self.printcore.printcoreHandler.pause and
         not self.printcore.is_printing:
             # clean data when finish printing
             self.clean_ALL_Data()
@@ -225,6 +225,7 @@ class Switcher(CommandSwitchTableProto, SendData):
             self.pool.add_task(
                 self.printcore.startprint(gcode_path)
             )
+
             self.printed = True
 
         except:

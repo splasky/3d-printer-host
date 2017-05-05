@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 08:32:37
+# Last modified: 2017-05-05 14:54:14
 
 import sys
 import time
@@ -202,13 +202,14 @@ class PrintCore(object):
         :return: return json string
 
         """
-        data = dict()
+        data = {}
         data["clear"] = self.printcoreHandler.clear
         data["isprinting"] = self.printcoreHandler.printing
         data["online"] = self.printcoreHandler.online
         data["baud"] = self.printcoreHandler.baud
         data["port"] = self.printcoreHandler.port
         data["position"] = self.getPosition()
+        data["pause"] = self.printcoreHandler.pause
         return data
 
     def gettemp(self):
