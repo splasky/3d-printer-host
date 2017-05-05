@@ -52,7 +52,7 @@ class Server(object):
                         PrintException()
                 else:
                     self.switcher.Thread_add_Send_Sensors()
-                    self.pool.add_task(self.switcher.status_checker)
+                    #  self.pool.add_task(self.switcher.status_checker)
         except KeyboardInterrupt:
             print("KeyboardInterrupt! Stop server")
             self.stopped.set()
