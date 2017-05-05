@@ -84,10 +84,7 @@ class SendData(object):
 
             # get printer status data
             data = self.printcore.printer_status()
-
             # get filename if startprint is start
-            data["PrintPercent"] = 0
-            data["File_Name"] = ""
             if self.printcore.is_printing():
                 # add print time into data
                 data["PrintPercent"] = self.Timer.getPercent()
