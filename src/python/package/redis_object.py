@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-25 20:24:14
+# Last modified: 2017-05-05 16:45:10
 
 
 # master:'control'
@@ -13,8 +13,8 @@ import time
 
 class redis_handler(object):
 
-    def __init__(self, Host, Port, master, slaver):
-        self.redis_handler = redis.StrictRedis(host=Host, port=Port, db=0)
+    def __init__(self, Host, Port, master, slaver, password):
+        self.redis_handler = redis.StrictRedis(host=Host, port=Port, db=0, password=password)
         self.master = master
         self.slaver = slaver
         self.pubsub = self.redis_handler.pubsub(ignore_subscribe_messages=True)
