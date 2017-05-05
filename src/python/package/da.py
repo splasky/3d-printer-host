@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 19:20:54
+# Last modified: 2017-05-05 08:32:37
 
 import sys
 import time
@@ -112,9 +112,12 @@ class PrintCore(object):
     Port = '/dev/ttyUSB0'
     Baud = 250000
 
-    def __init__(self, Port='/dev/ttyUSB0', Baud=250000):
+    def __init__(self, Port=None, Baud=None):
+        self.printcoreHandler = printcore()
+
+    def connect(self, Port='/dev/ttyUSB0', Baud=250000):
         try:
-            self.printcoreHandler = printcore(port=Port, baud=Baud)
+            self.printcoreHandler = printcore.connect(port=Port, baud=Baud)
             # must wait for printcore connect success
             time.sleep(3)
             setattr(self.printcoreHandler, 'logl', 0)
