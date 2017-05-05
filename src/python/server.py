@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 09:38:42
+# Last modified: 2017-05-05 19:02:44
 
 import os
 import sys
@@ -28,7 +28,9 @@ class Server(object):
         self.redis_handler = redis_handler(Host=self.config.config["redis_ip"],
                                            Port=self.config.config["redis_port"],
                                            master=self.config.config["redis_master"],
-                                           slaver=self.config.config["redis_slaver"])
+                                           slaver=self.config.config["redis_slaver"],
+                                           password=self.config.config["redis_password"])
+
         self.switcher = Switcher(self.redis_handler, self.directory, self.pool)
         self.isStopped = False
 
