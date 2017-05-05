@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-04-27 14:51:45
+# Last modified: 2017-05-05 19:21:04
 
 
 import time
@@ -69,23 +69,18 @@ class PercentTimer(Timer):
 
     # get timer elapsed percent
     def getPercent(self):
-        if self.total_time <= 0:
-            raise ValueError('Total Time must more than 0!')
+        assert self.set_total_time is not 0
         elapsed = self.get_elapsed()
         debug("Total time:" + str(self.total_time))
         debug("Through time:" + str(elapsed))
         try:
-            if(self.total_time > 0):
-                percent = round(elapsed / self.total_time) * 100
-                if(percent < 100):
-                    return percent
-                else:
-                    return 100
-            else:
-                raise ValueError('set total time first!')
-                return 0
+            percent = round((elapsed / self.total_time) * 100)
+            if(percent < 100):
+                return percent
+            return 100
         except:
             PrintException()
+            return 0
 
     def cleanTimer(self):
         self.reset()
