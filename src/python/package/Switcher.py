@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 15:01:19
+# Last modified: 2017-05-05 19:29:00
 
 import logging
 import os
@@ -169,7 +169,7 @@ class Switcher(CommandSwitchTableProto, SendData):
     def connect(self, port='/dev/ttyUSB0', baud=250000):
         # TODO:bad connect method
         if self.connected is not True:
-            self.printcore = PrintCore.connect(Port=port, Baud=baud)
+            self.printcore.connect(Port=port, Baud=baud)
             assert isinstance(self.printcore, PrintCore)
             self.pool.add_task(self.Send_Sensors())
             self.connected = True

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 14:54:14
+# Last modified: 2017-05-05 18:58:54
 
 import sys
 import time
@@ -117,7 +117,7 @@ class PrintCore(object):
 
     def connect(self, Port='/dev/ttyUSB0', Baud=250000):
         try:
-            self.printcoreHandler = printcore.connect(port=Port, baud=Baud)
+            self.printcoreHandler.connect(port=Port, baud=Baud)
             # must wait for printcore connect success
             time.sleep(3)
             setattr(self.printcoreHandler, 'logl', 0)
@@ -195,6 +195,9 @@ class PrintCore(object):
         print('py:stepper off')
         return True
 
+    def isPaused():
+        return self.printcoreHandler.paused
+
     def printer_status(self):
         """get printer status into json file
 
@@ -208,8 +211,11 @@ class PrintCore(object):
         data["online"] = self.printcoreHandler.online
         data["baud"] = self.printcoreHandler.baud
         data["port"] = self.printcoreHandler.port
-        data["position"] = self.getPosition()
-        data["pause"] = self.printcoreHandler.pause
+        try:
+            data["position"] = self.getPosition()
+            data["ispause"] = self.isPaused()
+        except:
+            return data
         return data
 
     def gettemp(self):
