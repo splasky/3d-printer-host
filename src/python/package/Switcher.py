@@ -153,15 +153,16 @@ class Switcher(CommandSwitchTableProto, SendData):
     def Send_Sensors(self):
         try:
             with self.Lock:
-                data = self.generator.next()
-                print("all datas:", data)
-                self.redis_handler.send(data)
-                time.sleep(0.001)
+                data = next(self.generator, None)
+                if data is not None:
+                    print("all datas:", data)
+                    self.redis_handler.send(data)
+                    time.sleep(0.001)
         except:
             PrintException()
 
     def Thread_add_Send_Sensors(self):
-        self.pool.add_task(self.Send_Sensors())
+        self.pool.add_task(self.Send_Sensors)
 
     def connect(self, port='/dev/ttyUSB0', baud=250000):
         # TODO:bad connect method
