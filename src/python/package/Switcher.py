@@ -71,7 +71,7 @@ class SendData(object):
         # set print time!
         est_time = es_time(gcode_path)
         (hours, miniutes) = est_time.estime()
-        assert hours not 0 and miniutes not 0
+        assert hours != 0 or miniutes != 0
         self.Set_Print_Time(hours, miniutes)
         self.Timer.start()
 
