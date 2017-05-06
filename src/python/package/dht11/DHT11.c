@@ -11,7 +11,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-void read_dht11_data(DHT11Data *data)
+#define COUNTER_MAX 255
+void read_dht11_data(DHT11Data *data, uint8_t wiringPi_Pin)
 {
     int dht11_dat[5] = {0, 0, 0, 0, 0};
 
@@ -22,41 +23,38 @@ void read_dht11_data(DHT11Data *data)
 
     dht11_dat[0] = dht11_dat[1] = dht11_dat[2] = dht11_dat[3] = dht11_dat[4] = 0;
 
-    pinMode( DHTPIN, OUTPUT );
-    digitalWrite( DHTPIN, LOW );
+    pinMode( wiringPi_Pin, OUTPUT );
+    digitalWrite( wiringPi_Pin, LOW );
     delay( 18 );
-    digitalWrite( DHTPIN, HIGH );
+    digitalWrite( wiringPi_Pin, HIGH );
     delayMicroseconds( 40 );
     /* prepare to read the pin */
-    pinMode( DHTPIN, INPUT );
+    pinMode( wiringPi_Pin, INPUT );
 
     /* detect change and read data */
     for ( i = 0; i < MAXTIMINGS; i++ )
     {
         counter = 0;
-        while ( digitalRead( DHTPIN ) == laststate )
+        while ( digitalRead( wiringPi_Pin ) == laststate )
         {
             counter++;
             delayMicroseconds( 1 );
-            if ( counter == 255 )
+            if ( counter == COUNTER_MAX )
             {
                 break;
             }
         }
-        laststate = digitalRead( DHTPIN );
 
-        if ( counter == 255 )
+        laststate = digitalRead( wiringPi_Pin );
+
+        if ( counter == COUNTER_MAX )
             break;
 
-        /* ignore first 3 transitions */
-        if ( (i >= 4) && (i % 2 == 0) )
-        {
-            /* shove each bit into the storage bytes */
-            dht11_dat[j / 8] <<= 1;
-            if ( counter > 16 )
-                dht11_dat[j / 8] |= 1;
-            j++;
-        }
+        /* shove each bit into the storage bytes */
+        dht11_dat[j / 8] <<= 1;
+        if ( counter > 16 )
+            dht11_dat[j / 8] |= 1;
+        j++;
     }
 
     if ( (j >= 40) &&
@@ -80,30 +78,4 @@ void read_dht11_data(DHT11Data *data)
         printf( "Data not good, skip\n" );
 #endif
     }
-}
-
-static PyObject* Call_DHT11(PyObject *self, PyObject *args)
-{
-    DHT11Data data =  {0, 0, 0, 0, 0};
-
-    read_dht11_data(&data);
-
-    return Py_BuildValue("(iiiii)", data.humidity,
-                         data.humidityfloat, data.temperature, data.temperaturefloat, data.checksum);
-}
-
-static PyObject* Init_WiringPi(PyObject *self, PyObject *args)
-{
-
-    if ( wiringPiSetup() == -1 )
-        exit( 1 );
-    return Py_BuildValue("i", 1);
-}
-
-
-// initialization
-
-PyMODINIT_FUNC initDHT11(void)
-{
-    (void)Py_InitModule("DHT11", methods);
 }

@@ -1,19 +1,7 @@
-#ifndef DHT11
+#ifndef PYDHT11
 #include <stdlib.h>
 #include <Python.h>
-#define MAXTIMINGS  85
-#define DHTPIN      7
-
-typedef struct
-{
-    uint8_t humidity;
-    uint8_t humidityfloat;
-    uint8_t temperature;
-    uint8_t temperaturefloat;
-    uint8_t checksum;
-} DHT11Data;
-
-void read_dht11_data(DHT11Data *data);
+#include "DHT11.h"
 static PyObject* Call_DHT11(PyObject *self, PyObject *args);
 static PyObject* Init_WiringPi(PyObject *self, PyObject *args);
 
@@ -27,5 +15,4 @@ static struct PyMethodDef methods[] =
 // initialization
 
 PyMODINIT_FUNC initDHT11(void);
-
-#endif /* ifndef SYMBOL */
+#endif
