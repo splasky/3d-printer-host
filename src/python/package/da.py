@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 18:58:54
+# Last modified: 2017-05-06 16:29:45
 
 import sys
 import time
@@ -195,7 +195,7 @@ class PrintCore(object):
         print('py:stepper off')
         return True
 
-    def isPaused():
+    def isPaused(self):
         return self.printcoreHandler.paused
 
     def printer_status(self):
@@ -213,9 +213,9 @@ class PrintCore(object):
         data["port"] = self.printcoreHandler.port
         try:
             data["position"] = self.getPosition()
-            data["ispause"] = self.isPaused()
         except:
-            return data
+            pass
+        data["ispause"] = self.isPaused()
         return data
 
     def gettemp(self):
