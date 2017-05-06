@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-06 16:29:45
+# Last modified: 2017-05-06 17:04:53
 
 import sys
 import time
@@ -114,6 +114,8 @@ class PrintCore(object):
 
     def __init__(self, Port=None, Baud=None):
         self.printcoreHandler = printcore()
+        self.logl = 0
+        self.temp = 0
 
     def connect(self, Port='/dev/ttyUSB0', Baud=250000):
         try:
