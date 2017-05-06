@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 19:29:00
+# Last modified: 2017-05-06 16:51:29
 
 import logging
 import os
@@ -210,10 +210,10 @@ class Switcher(CommandSwitchTableProto, SendData):
     def startprint(self, file_name):
 
         try:
+            self.clean_ALL_Data()
             gcode = self.redis_handler.redis_handler.get(file_name)
             self.set_file_name(file_name)
             gcode_path = os.path.join(self.directory, file_name)
-            self.CleanTimer()
             # create file
             with open(gcode_path, 'w') as f:
                 f.write(gcode)
