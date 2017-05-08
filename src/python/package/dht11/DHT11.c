@@ -4,28 +4,29 @@
  *  DHT11 test
  */
 
-#include <wiringPi.h>
 #include "DHT11.h"
-
+#include <wiringPi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #define COUNTER_MAX 255
-void read_dht11_data(DHT11Data *data, uint8_t wiringPi_Pin)
+void read_dht11_data(DHT11Data *data, int8_t wiringPi_Pin)
 {
-    int dht11_dat[5] = {0, 0, 0, 0, 0};
-
     uint8_t laststate   = HIGH;
     uint8_t counter     = 0;
     uint8_t j       = 0, i;
     float   f; /* fahrenheit */
+    data->checksum = 0;
+    data->temperature = 0;
+    data->temperaturefloat = 0;
+    data->humidity = 0;
+    data->humidityfloat = 0;
 
-    dht11_dat[0] = dht11_dat[1] = dht11_dat[2] = dht11_dat[3] = dht11_dat[4] = 0;
+    int8_t *p = &data->humidity;
 
     pinMode( wiringPi_Pin, OUTPUT );
     digitalWrite( wiringPi_Pin, LOW );
-    delay( 18 );
+    delay( 20 );
     digitalWrite( wiringPi_Pin, HIGH );
     delayMicroseconds( 40 );
     /* prepare to read the pin */
@@ -51,25 +52,24 @@ void read_dht11_data(DHT11Data *data, uint8_t wiringPi_Pin)
             break;
 
         /* shove each bit into the storage bytes */
-        dht11_dat[j / 8] <<= 1;
-        if ( counter > 16 )
-            dht11_dat[j / 8] |= 1;
-        j++;
+        if (i >= 4)
+        {
+            *p <<= 1;
+            if ( counter > 24 )
+                *p |= 1;
+            j++;
+            if (j % 8 == 0 && j != 0)
+                ++p;
+        }
     }
 
     if ( (j >= 40) &&
-            (dht11_dat[4] == ( (dht11_dat[0] + dht11_dat[1] + dht11_dat[2] + dht11_dat[3]) & 0xFF) ) )
+            (data->checksum == ( (data->humidity + data->humidityfloat + data->temperature + data->temperaturefloat) & 0xFF) ) )
     {
-        f = dht11_dat[2] * 9. / 5. + 32;
-        data->humidity = dht11_dat[0];
-        data->humidityfloat = dht11_dat[1];
-        data->temperature = dht11_dat[2];
-        data->temperaturefloat = dht11_dat[3];
-        data->checksum = dht11_dat[4];
-
+        f = data->temperature * 9. / 5. + 32;
 #ifdef DEBUG
         printf( "Humidity = %d.%d %% Temperature = %d.%d *C (%.1f *F)\n",
-                dht11_dat[0], dht11_dat[1], dht11_dat[2], dht11_dat[3], f );
+                data->humidity, data->humidityfloat, data->temperature, data->temperaturefloat, f );
 #endif
     }
     else

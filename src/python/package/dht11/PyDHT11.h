@@ -1,7 +1,10 @@
-#ifndef PYDHT11
-#include <stdlib.h>
+#ifndef __PYDHT11_H_
+#define __PYDHT11_H_
 #include <Python.h>
 #include "DHT11.h"
+#include <stdlib.h>
+
+#define PIN 2
 static PyObject* Call_DHT11(PyObject *self, PyObject *args);
 static PyObject* Init_WiringPi(PyObject *self, PyObject *args);
 

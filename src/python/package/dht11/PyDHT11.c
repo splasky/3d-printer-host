@@ -4,7 +4,7 @@ static PyObject* Call_DHT11(PyObject *self, PyObject *args)
 {
     DHT11Data data =  {0, 0, 0, 0, 0};
 
-    read_dht11_data(&data);
+    read_dht11_data(&data, PIN);
 
     return Py_BuildValue("(iiiii)", data.humidity,
                          data.humidityfloat, data.temperature, data.temperaturefloat, data.checksum);
