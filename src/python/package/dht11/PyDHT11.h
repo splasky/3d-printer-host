@@ -17,5 +17,5 @@ static struct PyMethodDef methods[] =
 };
 // initialization
 
-PyMODINIT_FUNC initDHT11(void);
+PyMODINIT_FUNC initlibDHT11(void);
 #endif

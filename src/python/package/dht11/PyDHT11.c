@@ -21,7 +21,7 @@ static PyObject* Init_WiringPi(PyObject *self, PyObject *args)
 
 // initialization
 
-PyMODINIT_FUNC initDHT11(void)
+PyMODINIT_FUNC initlibDHT11(void)
 {
-    (void)Py_InitModule("DHT11", methods);
+    (void)Py_InitModule("libDHT11", methods);
 }
