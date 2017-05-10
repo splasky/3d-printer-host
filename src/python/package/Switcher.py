@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-06 16:51:29
+# Last modified: 2017-05-09 17:24:44
 
 import logging
 import os
@@ -66,6 +66,9 @@ class SendData(object):
 
     def StopTimer(self):
         self.Timer.stop()
+
+    def ResumeTimer(self):
+        self.Timer.resume()
 
     def StartTimer(self, gcode_path):
         # set print time!
@@ -187,7 +190,7 @@ class Switcher(CommandSwitchTableProto, SendData):
 
     def resume(self):
         self.printcore.resume()
-        self.StartTimer()
+        self.ResumeTimer()
 
     def cancel(self):
         self.printcore.cancel()

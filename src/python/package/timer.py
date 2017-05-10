@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-05 19:21:04
+# Last modified: 2017-05-09 17:21:47
 
 
 import time
@@ -16,6 +16,7 @@ class Timer(object):
         self.elapsed = 0.0
         self._func = func
         self._start = 0
+        self.isStopped = False
 
     def __add__(self, other):
         return int.__add__(self.elapsed + other.elapsed)
@@ -25,13 +26,22 @@ class Timer(object):
             raise RuntimeError('Timer already started')
         self._start = self._func()
 
+    def resume(self):
+        self._start = self._func()
+        self.isStopped = False
+
     def stop(self):
         end = self._func()
         self.elapsed += round(end - self._start)
         self._start = 0
+        self.isStopped = True
 
     def get_elapsed(self):
-        self.stop()
+        if(self.isStopped):
+            return self.elapsed
+        end = self._func()
+        self.elapsed += round(end - self._start)
+        self._start = 0
         time = self.elapsed
         self.start()
         return time
