@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-09 17:24:44
+# Last modified: 2017-05-10 21:26:20
 
 import logging
 import os
@@ -92,6 +92,9 @@ class SendData(object):
                 # add print time into data
                 data["PrintPercent"] = self.Timer.getPercent()
                 data["File_Name"] = self.fileName
+            #  if self.printcore.isPaused():
+                #  data["IR_temperature"] = 200.0
+
             logging.debug("Create Json data success.")
             return data
         except:
@@ -99,16 +102,20 @@ class SendData(object):
             return {}
 
     def json_double_data(self):
+        previous_IR = 0
         while True:
             try:
                 data = self.createJsonData()
+                if data["IR_temperature"] is None:
+                    data["IR_temperature"] = previous_IR
+
                 sensors_data = self.sensors.get_Sensors_data()
-                sensors_data["IR_temperature"] = self.printcore.headtemp()
                 all_data = {}
                 all_data.update(data)
                 all_data.update(sensors_data)
                 logging.debug("json_double_data success.")
                 all_data = json.dumps(all_data, separators=(',', ':')).encode('utf-8')
+                previous_IR = data["IR_temperature"]
                 yield all_data
             except:
                 PrintException()

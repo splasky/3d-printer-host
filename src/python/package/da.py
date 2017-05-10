@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-10 21:01:52
+# Last modified: 2017-05-10 21:36:43
 
 import sys
 import time
@@ -214,6 +214,7 @@ class PrintCore(object):
         data["baud"] = self.printcoreHandler.baud
         data["port"] = self.printcoreHandler.port
         try:
+            data["IR_temperature"] = self.headtemp()
             data["position"] = self.getPosition()
         except:
             pass
@@ -279,6 +280,10 @@ def create_json_file(path, data):
 
 class sensors(object):
 
+    def __init__(self):
+        self.humidity = 0
+        self.temperature = 0
+
     def get_current_time(self):
         return str(datetime.datetime.now())
 
@@ -291,6 +296,13 @@ class sensors(object):
 
             data = {"humidity": humidity, "humidityfloat": humidityfloat,
                     "temperature": temperature, "temperaturefloat": temperaturefloat}
+
+            if(humidity + temperature != checksum):
+                data["humidity"] = self.humidity
+                data["temperature"] = self.temperature
+
+            self.humidity = data["humidity"]
+            self.temperature = data["temperature"]
 
             return data
         except:
