@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-06 16:51:55
+# Last modified: 2017-05-10 21:01:08
 
 import os
 import sys
@@ -11,7 +11,7 @@ from package.debug import PrintException
 from package.Switcher import Switcher
 from package.redis_object import redis_handler
 from package.environment_config import UseConfigs
-from package import DHT11
+from package.dht11 import libDHT11
 
 
 class Server(object):
@@ -22,7 +22,7 @@ class Server(object):
         self.stopped = threading.Event()
         self.check_directory()
         self.config_file_path = os.path.join(self.directory, "config_file.json")
-        DHT11.Init_WiringPi()
+        libDHT11.Init_WiringPi()
         self.config = UseConfigs(self.config_file_path)
         self.check_config()
         self.redis_handler = redis_handler(Host=self.config.config["redis_ip"],

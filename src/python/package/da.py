@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-06 17:04:53
+# Last modified: 2017-05-10 21:01:52
 
 import sys
 import time
@@ -18,7 +18,7 @@ from package.debug import PrintException
 
 # Third party
 import MySQLdb
-import DHT11
+from package.dht11 import libDHT11
 from package import TMP006
 from adxl345 import ADXL345
 # import from third party lib
@@ -284,10 +284,10 @@ class sensors(object):
 
     def DHT11_temp(self):
         try:
-            # have to use DHT11.Init_WiringPi() first
+            # have to use libDHT11.Init_WiringPi() first
             checksum = 0
             #  while checksum is not 0:
-            humidity, humidityfloat, temperature, temperaturefloat, checksum = DHT11.read_DHT11()
+            humidity, humidityfloat, temperature, temperaturefloat, checksum = libDHT11.read_DHT11()
 
             data = {"humidity": humidity, "humidityfloat": humidityfloat,
                     "temperature": temperature, "temperaturefloat": temperaturefloat}
