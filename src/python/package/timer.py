@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-09 17:21:47
+# Last modified: 2017-05-10 21:48:50
 
 
 import time
@@ -69,7 +69,7 @@ class PercentTimer(Timer):
         if value < 0:
             raise ValueError('Total Time must more than 0!')
 
-        self.__CONST_HEATTIME = 120
+        self.__CONST_HEATTIME = 60
         self.total_time = round(value + self.__CONST_HEATTIME)
 
     def set_total_time(self, value):
