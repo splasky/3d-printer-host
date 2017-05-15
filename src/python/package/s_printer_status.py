@@ -9,7 +9,7 @@ import logging
 import os
 import time
 from package.da import create_json_file
-from debug import PrintException
+from .debug import PrintException
 from package.sock_proto import Send_File_Server
 
 
@@ -27,7 +27,7 @@ def S_printer_status(data):
                 print("send success")
             else:
                 print("send printer status failed")
-    except Exception, ex:
+    except Exception as ex:
         PrintException()
         time.sleep(10)
     finally:

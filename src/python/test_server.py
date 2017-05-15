@@ -1,73 +1,46 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-09-02 17:10:56
+# Last modified: 2017-04-21 14:50:07
 
-import socket
-#  import da
-import sys
-import send
-import logging
-import os
+from server import Server
+import redis
+import pytest
+import tempfile
 
 
-def string_parser(sockfd, src, p):
-    if src == "connect":
-        logging.debug("connect")
-    elif src == "disconnect":
-        logging.debug("dissconnect")
-    elif src == "reset":
-        logging.debug("reset")
-    elif src == "pause":
-        logging.debug("pause")
-    elif src == "resume":
-        logging.debug("resume")
-    elif src == "cancel":
-        logging.debug("cancel")
-    elif src == "home":
-        logging.debug("home")
-    elif src == "send_now":
-        logging.debug("send_now")
-    elif src == "startprint":
-        logging.debug("startprint")
-    else:
-        logging.warning("no commend")
-    return p
+class Base:
+
+    def __init__(self):
+        self.host = '172.17.135.86'
+        self.port = '6379'
+        self.master = "control"
+        self.sensor = "sensors"
 
 
-def main():
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except socket.error:
-        logging.debug("socket error")
-        sys.exit(1)
+@pytest.fixture
+def cleandir():
+    new_path = tempfile.mktemp()
+    return new_path
 
-    port = 8888
-    host = ''  # Symbolic name meaning all available interfaces
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # reuse tcp
-    sock.bind((host, port))
-    sock.listen(5)
-    #  sock.settimeout(10)
 
-    p = None
-    try:
-        while True:
-            logging.debug("server accept")
-            (csock, adr) = sock.accept()
-            print ("Client Info: ", csock, adr)
-            src = csock.recv(1024)
-            if not src:
-                pass
-            else:
-                p = string_parser(csock, src, p)
-                print ("Client send: " + src)
-                csock.send("Hello I'm Server.\r\n")
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt! Stop server")
-        csock.close()
-        sys.exit(0)
-    finally:
-        csock.close()
+@pytest.fixture(scope='module')
+def master():
+    base = Base()
+    return redis.StrictRedis(host=base.host, port=base.port)
 
-if __name__ == "__main__":
-    main()
+
+@pytest.fixture
+def server(cleandir):
+    return Server(cleandir)
+
+
+def test_main(server, master):
+    server.run_main()
+    assert master.publish('control', 'connect')
+    assert master.publish('control', 'home')
+    assert master.publish('control', 'send_now G28')
+    #  master.publish('control','startprint xxxx')
+    assert master.publish('control', 'Helloworld!')
+    assert master.publish('control', 'Hello world!')
+    assert master.publish('control', 'disconnect')

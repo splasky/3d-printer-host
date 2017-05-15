@@ -1,5 +1,7 @@
+config
 **\tags
 *.swp
-*.pyc
-test_*
-
+**.pyc
+**/*.pyc
+*.cache
+*.ipynb*

@@ -11,4 +11,4 @@ def PrintException():
     f = tb.tb_frame
     lineno = tb.tb_lineno
     filename = f.f_code.co_filename
-    print 'EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, exc_type, exc_obj)
+    print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, exc_type, exc_obj))

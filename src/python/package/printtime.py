@@ -31,7 +31,7 @@ class check_print_time():
                     self.hour=int(time[1])
                     self.minute=int(time[2])
                     
-                    print 'Print time: {} day {}  hour {} minute'.format(self.day,self.hour,self.minute)
+                    print('Print time: {} day {}  hour {} minute'.format(self.day,self.hour,self.minute))
                     return self.day,self.hour,self.minute
                     break
                 if 'hour' in line:
@@ -39,14 +39,14 @@ class check_print_time():
                     self.minute=int(time[1])
                     
                    
-                    print 'Print time: {}  hour {} minute'.format(self.hour,self.minute)
+                    print('Print time: {}  hour {} minute'.format(self.hour,self.minute))
                     return self.hour,self.minute
                     break
                 if 'min' in line:
                     
                     self.minute=int(time[0])
                     
-                    print 'Print time: {} minute'.format(self.minute)
+                    print('Print time: {} minute'.format(self.minute))
                     
                     return self.minute
                     break
@@ -62,14 +62,14 @@ class check_print_time():
 
         self.endtime=self.start_time+timedelta(days=self.day,hours=self.hour,minutes=self.minute)
 
-        print(self.endtime)
+        print((self.endtime))
         
 
     def remaining_time(self):
 
         self.remain_min=(self.endtime-datetime.now()).minute
 
-        print self.remain_min
+        print(self.remain_min)
 
         
     def time_pause(self):

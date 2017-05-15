@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-11-29 17:18:04
+# Last modified: 2017-04-18 16:40:21
 
 import socket
 import sys
@@ -11,6 +11,8 @@ import time
 import json
 import fcntl
 import threading
+import subprocess
+from subprocess import Popen
 from package.send import upload_client
 from package.c_printer_status import C_printer_status
 from package.debug import PrintException
@@ -18,8 +20,45 @@ from package.sock_proto import TCP_Client
 from package.sock_proto import TCP_Server
 
 
-printer_status_path = "/var/www/3dprint/php/json/"
-FIFO = "/tmp/3dprinter.fifo"
+printer_status_path = os.path.join("/var/www/3dprint/php/json/")
+printer_status_file = path = printer_status_path + "printer.json"
+mjpg_path = "/home/pi/mjpg-streamer/mjpg-streamer.sh"
+
+
+class PrinterJson(object):
+
+    def __init__(self):
+        self.online = False
+        self.baud = 0
+        self.PrintPercent = 0
+        self.isprinting = False
+        self.clear = True
+        self.File_Name = None
+        self.online = False
+        self.position = None
+        self.port = None
+
+    def generate(self):
+        data = dict()
+        data["baud"] = self.baud
+        data["PrintPercent"] = self.PrintPercent
+        data["isprinting"] = self.isprinting
+        data["clear"] = self.clear
+        data["File_Name"] = self.File_Name
+        data["online"] = self.position
+        data["port"] = self.port
+        return data
+
+
+def offline():
+    try:
+        with open(printer_status_file, 'w') as file:
+            fcntl.lockf(file, fcntl.LOCK_EX)
+            data = PrinterJson()
+            file.write(data)
+        subprocess.call([mjpg_path, "stop"])
+    except:
+        logging.debug("error when write to printer.json")
 
 
 class PrinterStatusDaemon(threading.Thread):
@@ -50,8 +89,6 @@ def main():
         try:
             localServer.WaitForConnecting()
             command = localServer.Client.recv(1024)
-
-            #  command = raw_input("input:")
             command = command.split(" ", 2)
             if len(command) < 2:
                 print("error: must enter ip and port")
@@ -82,8 +119,8 @@ def main():
                 if li[0].strip() == "disconnect":
                     time.sleep(5)  # wait for server stop and get last status
                     PrinterStatusThread.stopRun()
-                    PrinterStatusThread.join(10)
-                    C_printer_status(printer_status_path, host,)
+                    PrinterStatusThread.join(20)
+                    offline()
 
                 if li[0].strip() == "connect":
                     PrinterStatusThread = PrinterStatusDaemon(host, 6666)
@@ -92,7 +129,7 @@ def main():
 
             # recv from server
             redata = Client.recv(1024)
-            print("recv data:", redata)
+            print(("recv data:", redata))
             Client.close()
             del Client
         except KeyboardInterrupt:

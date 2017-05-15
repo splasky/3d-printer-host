@@ -6,7 +6,7 @@
 import socket
 import os
 import logging
-from debug import PrintException
+from .debug import PrintException
 
 
 class TCP_Server(object):
@@ -37,7 +37,7 @@ class Send_File_Server(TCP_Server):
         try:
             # recv check message
             check = self.Client.recv(1024)
-            print("Check:", check)
+            print(("Check:", check))
             del check
             return True
         except socket.timeout:
@@ -63,8 +63,8 @@ class Send_File_Server(TCP_Server):
                     self.Client.send(data)
                     data = f.read(1024)
                     remain_data -= len(data)
-                    print("send {0} bytes string,remaining {1} bytes".format(
-                        len(data), remain_data))
+                    print(("send {0} bytes string,remaining {1} bytes".format(
+                        len(data), remain_data)))
             print("Sender Done sending")
             return True
         except socket.timeout:
@@ -78,10 +78,10 @@ class Send_File_Server(TCP_Server):
         try:
             filesize = os.path.getsize(filepath)
             filename = filepath.split("/")[-1]
-            print("start send file:", filename, "file size:", filesize)
+            print(("start send file:", filename, "file size:", filesize))
 
             # send file name
-            print("send file name", filename)
+            print(("send file name", filename))
             self.Client.send(filename)
             if not self.__check_send():
                 raise Exception("Check send failed on file name")
@@ -132,7 +132,7 @@ class Get_File_Client(TCP_Client):
             print("start Receving data...")
             # receive file size
             filesize = self.sock.recv(1024)
-            print("file size:", filesize)
+            print(("file size:", filesize))
             self.__check_send()
 
             # receive data
@@ -156,7 +156,7 @@ class Get_File_Client(TCP_Client):
             if filename is None:
                 raise Exception("Receive file name failed")
 
-            print("file name:{0}".format(filename))
+            print(("file name:{0}".format(filename)))
             self.__check_send()
 
             if not self.ReceiveData(filepath, filename):

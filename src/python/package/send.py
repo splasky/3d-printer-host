@@ -8,7 +8,7 @@ import os
 import logging
 import sys
 import time
-from debug import PrintException
+from .debug import PrintException
 
 
 def sender(file_name, port_num=5000):
@@ -22,11 +22,11 @@ def sender(file_name, port_num=5000):
         s.listen(5)
 
         filesize = os.path.getsize(file_name)
-        print("start send file:", file_name, "file size:", filesize)
+        print(("start send file:", file_name, "file size:", filesize))
         conn, addr = s.accept()
 
         print("start sending file...")
-        print("Got connection from", addr)
+        print(("Got connection from", addr))
         with open(os.path.abspath(file_name), 'r') as f:
             # send file size
             conn.send(str(os.fstat(f.fileno()).st_size))
@@ -39,8 +39,8 @@ def sender(file_name, port_num=5000):
                 conn.send(data)
                 data = f.read(1024)
                 remain_data -= len(data)
-                print("send %s bytes string,remaining %s bytes",
-                      len(data), remain_data)
+                print(("send %s bytes string,remaining %s bytes",
+                      len(data), remain_data))
         print("Sender Done sending")
         return True
     except:
@@ -62,7 +62,7 @@ def receiver(file_name, host, port_num=5000):
         print("start Receving file...")
         # receive file size
         filesize = sock.recv(1024)
-        print("file size:", filesize)
+        print(("file size:", filesize))
 
         # receive data
         with open(os.path.abspath(file_name), 'w') as f:
@@ -91,13 +91,13 @@ def upload_client(filepath, Host, Port=6000):
         s.connect((host, port))
 
         filesize = os.path.getsize(filepath)
-        print("start send file:", filepath, "file size:", filesize)
+        print(("start send file:", filepath, "file size:", filesize))
         filename = filepath.split("/")[-1]
         s.send(filename)
 
         # get feedback
         check = s.recv(1024)
-        print("check:", check)
+        print(("check:", check))
 
         print("start sending file...")
         with open(os.path.abspath(filepath), 'r') as f:
@@ -106,7 +106,7 @@ def upload_client(filepath, Host, Port=6000):
 
             # recv check message
             check = s.recv(1024)
-            print ("get check message:", check)
+            print(("get check message:", check))
             del check
 
             # start send data
@@ -116,8 +116,8 @@ def upload_client(filepath, Host, Port=6000):
                 s.send(data)
                 data = f.read(1024)
                 remain_data -= len(data)
-                print("send {0} bytes string,remaining {1} bytes".format(
-                    len(data), remain_data))
+                print(("send {0} bytes string,remaining {1} bytes".format(
+                    len(data), remain_data)))
         print("Send file done sending")
         return True
         s.close()
@@ -141,13 +141,13 @@ def upload_server(filepath, Port=6000):
         (conn, addr) = sock.accept()
 
         filename = conn.recv(1024)
-        print("Receive file name:", filename)
+        print(("Receive file name:", filename))
         conn.send("check")
 
         print("start Receving file...")
         # receive file size
         filesize = conn.recv(1024)
-        print("file size:", filesize)
+        print(("file size:", filesize))
 
         # ok recv success
         conn.send("ok")
@@ -168,6 +168,6 @@ def upload_server(filepath, Port=6000):
     except socket.timeout:
         print("time out of receive")
         return False
-    except Exception, ex:
+    except Exception as ex:
         PrintException()
         return False

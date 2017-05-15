@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2016-09-19 16:03:49
+# Last modified: 2017-02-13 17:37:10
 
 import socket
 import sys
@@ -14,10 +14,10 @@ from package.send import receive_file
 from package.c_printer_status import C_printer_status
 
 
-def main(Host):
+def test_main(Host):
     C_printer_status(Host)
     return True
 
 
 if __name__ == "__main__":
-    main("172.17.135.190")
+    test_main("172.17.135.190")
