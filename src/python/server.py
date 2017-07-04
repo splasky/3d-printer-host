@@ -211,7 +211,7 @@ if __name__ == "__main__":
 =======
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-10 21:01:08
+# Last modified: 2017-07-04 17:18:58
 
 import os
 import sys
@@ -292,7 +292,9 @@ class Server(object):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(filename='printer3d.log',
+                        level=logging.DEBUG
+                        )
     try:
         # path to put gcode
         directory = "/home/pi/Rpi3dPrinter"

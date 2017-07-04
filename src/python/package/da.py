@@ -413,7 +413,7 @@ if __name__ == "__main__":
 =======
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-# Last modified: 2017-05-10 21:36:43
+# Last modified: 2017-05-16 20:55:48
 
 import sys
 import time
@@ -706,6 +706,12 @@ class sensors(object):
             checksum = 0
             #  while checksum is not 0:
             humidity, humidityfloat, temperature, temperaturefloat, checksum = libDHT11.read_DHT11()
+
+            while True:
+                if checksum is not 0:
+                    break
+                else:
+                    humidity, humidityfloat, temperature, temperaturefloat, checksum = libDHT11.read_DHT11()
 
             data = {"humidity": humidity, "humidityfloat": humidityfloat,
                     "temperature": temperature, "temperaturefloat": temperaturefloat}
